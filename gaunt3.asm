@@ -655,6 +655,7 @@ WallColorList:	db 70h,5,40h,2
 ;;; ESTA USADA -> ESTE TROZO HACE QUE SE CUELGUE SI SE PONE EN LA DIRECCION CORRECTA
 
 RELMEM:	equ 0da00h
+	
 	forg 	08000h-LdAddress
 	org	08000h 
 

@@ -34,6 +34,13 @@ TIMEFADE equ	3
 	
 Init:	ld	a,1fh
 	out	(2eh),a
+
+	ld	hl,datab
+	ld	de,databss
+	ld	bc,datae-datab
+	ldir
+	
+	
 	ld	a,14h
 	call	InitVDP
 	
@@ -45,13 +52,8 @@ Init:	ld	a,1fh
 	call	initscr
 	ret
 
-
-
-TIME:		db	0
-PAL_GM:		DS	32,0	
+	
 PAL_NEGRO:	DS	32,0
-PALETAD1:	DW	0
-PALETAW1:	DS	32,0
 
 	
   	
@@ -126,8 +128,8 @@ selectP1:
 getNumbers:
 	call	showCart
 	call	SPD_ON
-	ld	hl,.rcopy1p
-	ld	(.copyptr),hl
+	ld	hl,rcopy1p
+	ld	(copyptr),hl
 
 .loop:		
 	ei
@@ -138,7 +140,7 @@ getNumbers:
 	or	a
 	jr	nz,.one
 .erase:		
-	ld	hl,(.copyptr)
+	ld	hl,(copyptr)
 	call	WAIT_COM
 	call	COPYVRAM
 	jr	.loop
@@ -146,17 +148,17 @@ getNumbers:
 .one:	dec	a
 	cp	4
 	jr	nz,.two
-	ld	hl,.rcopy1p
-	ld	(.copyptr),hl	
-	ld	hl,.copy1p
+	ld	hl,rcopy1p
+	ld	(copyptr),hl	
+	ld	hl,copy1p
 	ld	a,1
 	jr	.tfire
 	
 .two:	cp	5
 	jr	nz,.erase  
-	ld	hl,.rcopy2p
-	ld	(.copyptr),hl
-	ld	hl,.copy2p
+	ld	hl,rcopy2p
+	ld	(copyptr),hl
+	ld	hl,copy2p
 	ld	a,2
 
 .tfire:
@@ -171,13 +173,6 @@ getNumbers:
 
 
 
-.rcopy1p:	db	1,0,   213,3, 80,0,  82,3, 32,0, 18,0, 0,0, 0d0h
-.rcopy2p:	db	56,0,  213,3, 136,0, 82,3, 32,0, 18,0, 0,0, 0d0h		
-.copy1p:	db	224,0, 213,3, 87,0,  82,3, 32,0, 18,0, 0,0, 0d0h
-.copy2p:	db	224,0, 237,3, 136,0, 82,3, 32,0, 18,0, 0,0, 0d0h
-	
-.copyptr:	dw	0
-nplayers:	db	0
 	
 	
 
@@ -235,11 +230,7 @@ Pos:	db	143,90,167,99,6
 	db	0
 
 	
-	
-copyscr:	db	0,0,   0,3,   0,0,   0,1,   255,0, 0,1,  0,0, 0d0h
-buildp2:	db	192,0, 211,1, 161,0, 211,1, 32,0,  45,0, 0,0, 0d0h	
-copyline:	db	0,0,   212,3, 80,0,  80,3,  96,0,  1,0,  0,0, 0d0h
-copylineI:	db	80,0,  0,1,   80,0,  0,3,   96,0,  1,0,  0,0, 0d0h
+
 
 
 hideCart:
@@ -376,9 +367,7 @@ MoveHand:
 
 
 
-	
-OffsetX:	db	0
-OffsetY:	db	0	
+
 
 
 
@@ -633,29 +622,12 @@ DOFADEIG2:
 
 
 
+XINICIAL:	equ	128
+YINICIAL:	equ	96		
 
 
 
 	
-COOR_XY: 
-	 db 60,60
-	 db 0,0
-	 db 60,76
-	 db 4,0
-	 db 76,60
-	 db 8,0
-	 db 76,76
-	 db 12,0
-
-		
-	 db 60,60
-	 db 16,0
-	 db 60,76
-	 db 20,0
-	 db 76,60
-	 db 24,0
-	 db 76,76
-	 db 28,0
 		
 
 
@@ -778,9 +750,9 @@ endint:
 	reti
 
 
-Pointer:	db	0
-counter:	db	0
-aux:		db	0
+
+
+
 
 
 PalletteSFX2:
@@ -946,8 +918,8 @@ oldvector1:
 	pop	af
 	ei
 	reti
-oldvector:
-	db	0,0,0,0,0
+
+	
 newvector:
 	jp	Interrupt
 	
@@ -986,7 +958,7 @@ ColourSFX:
 	ret
 	
 
-colourSfxFlag:	db	0
+
 	
 
 
@@ -1409,9 +1381,6 @@ LEE_JOY:
         ret
 	
 	
-JOYPORT1:	db	0
-JOYPORT2:	db	0				
-	
 		
 
 ; decompresses to VRAM
@@ -1685,6 +1654,92 @@ gtitle:
 
 	
 
+
+
+
+
+
+
+
 	
-end:	db 0
+datab:	equ	$	
+
+COOR_XY_sh: 
+	 db YINICIAL,XINICIAL
+	 db 0,0
+	 db YINICIAL,XINICIAL+16
+	 db 4,0
+	 db YINICIAL+16,XINICIAL
+	 db 8,0
+	 db YINICIAL+16,XINICIAL+16
+	 db 12,0
+
+		
+	 db YINICIAL,XINICIAL
+	 db 16,0
+	 db YINICIAL,XINICIAL+16
+	 db 20,0
+	 db YINICIAL+16,XINICIAL
+	 db 24,0
+	 db YINICIAL+16,XINICIAL+16
+	 db 28,0
 	
+
+rcopy1p_sh:	db	1,0,   213,3, 80,0,  82,3, 32,0, 18,0, 0,0, 0d0h
+rcopy2p_sh:	db	56,0,  213,3, 136,0, 82,3, 32,0, 18,0, 0,0, 0d0h		
+copy1p_sh:		db	224,0, 213,3, 87,0,  82,3, 32,0, 18,0, 0,0, 0d0h
+copy2p_sh:		db	224,0, 237,3, 136,0, 82,3, 32,0, 18,0, 0,0, 0d0h
+copyptr_sh:	dw	0
+nplayers_sh:	db	0		
+copyscr_sh:	db	0,0,   0,3,   0,0,   0,1,   255,0, 0,1,  0,0, 0d0h
+buildp2_sh:	db	192,0, 211,1, 161,0, 211,1, 32,0,  45,0, 0,0, 0d0h	
+copyline_sh:	db	0,0,   212,3, 80,0,  80,3,  96,0,  1,0,  0,0, 0d0h
+copylineI_sh:	db	80,0,  0,1,   80,0,  0,3,   96,0,  1,0,  0,0, 0d0h	
+Pointer_sh:	db	0
+counter_sh:	db	0
+TIME_sh:	db	0	
+OffsetX_sh:	db	0
+OffsetY_sh:	db	0	
+
+
+
+datae:		equ $	
+
+	
+	
+end:		equ	$
+
+
+databss:	equ	$
+				
+COOR_XY:	rw	16	
+rcopy1p:	rb	15
+rcopy2p:	rb	15
+copy1p:		rb	15
+copy2p:		rb	15
+copyptr:	rw	1
+nplayers:	rb	1		
+copyscr:	rb	15
+buildp2:	rb	15
+copyline:	rb	15
+copylineI:	rb	15
+Pointer:	rb	1
+counter:	rb	1
+TIME:		rb	1
+OffsetX:	rb	1
+OffsetY:	rb	1	
+
+	
+	
+	
+
+	
+
+aux:		rb	1	
+oldvector:	rb	5			
+JOYPORT1:	rb	1
+JOYPORT2:	rb	1
+PALETAD1:	rw	1
+PALETAW1:	rb	32
+PAL_GM:		rb	32
+
