@@ -79,7 +79,7 @@ LoadMazeR:
 .loop:		
 	push	hl
 	push	de
-	ld	b,5
+	ld	b,6
 	
 .strcmp:		
 	inc	hl
@@ -129,140 +129,139 @@ LoadMazeR:
 	dw	maze00&0ffffh
 
 	db	"MAZE01"
-	db	maze00>>16
+	db	maze01>>16
 	dw	maze01&0ffffh
 	
 	db	"MAZE02"
-	db	0
-	dw	0
+	db	maze02>>16
+	dw	maze02&0ffffh
 
 
 	db	"MAZE03"
-	db	0
-	dw	0
-
+	db	maze03>>16
+	dw	maze03&0ffffh
 
 	db	"MAZE04"
-	db	0
-	dw	0
+	db	maze04>>16
+	dw	maze04&0ffffh
 
 
 	db	"MAZE05"
-	db	0
-	dw	0
-
+	db	maze05>>16
+	dw	maze05&0ffffh
 
 	db	"MAZE06"
-	db	0
-	dw	0
-
-
+	db	maze06>>16
+	dw	maze06&0ffffh
+	
 	db	"MAZE07"
-	db	0
-	dw	0
+	db	maze07>>16
+	dw	maze07&0ffffh
 
 
 	db	"MAZE08"
-	db	0
-	dw	0
+	db	maze08>>16
+	dw	maze08&0ffffh
 
 
 	db	"MAZE09"
-	db	0
-	dw	0
-
+	db	maze09>>16
+	dw	maze09&0ffffh	
 
 	db	"MAZE10"
-	db	0
-	dw	0
+	db	maze10>>16
+	dw	maze10&0ffffh
 
 
 	db	"MAZE11"
-	db	0
-	dw	0
+	db	maze11>>16
+	dw	maze11&0ffffh
 
 
 	db	"MAZE12"
-	db	0
-	dw	0
+	db	maze12>>16
+	dw	maze12&0ffffh
 
 
 	db	"MAZE13"
-	db	0
-	dw	0
+	db	maze13>>16
+	dw	maze13&0ffffh
 
+	
 	db	"MAZE14"
-	db	0
-	dw	0
+	db	maze14>>16
+	dw	maze14&0ffffh
 
 	db	"MAZE15"
-	db	0
-	dw	0
+	db	maze15>>16
+	dw	maze15&0ffffh
 
 	db	"MAZE16"
-	db	0
-	dw	0
+	db	maze16>>16
+	dw	maze16&0ffffh
 
 	db	"MAZE17"
-	db	0
-	dw	0
+	db	maze17>>16
+	dw	maze17&0ffffh
+	
 
 	db	"MAZE18"
-	db	0
-	dw	0
-
+	db	maze18>>16
+	dw	maze18&0ffffh
+	
+	
 	db	"MAZE19"
-	db	0
-	dw	0
+	db	maze19>>16
+	dw	maze19&0ffffh
+	
 
 	db	"MAZE20"
-	db	0
-	dw	0
-
-
-	db	"MAZE20"
-	db	0
-	dw	0
+	db	maze20>>16
+	dw	maze20&0ffffh
+	
 	
 	db	"MAZE21"
-	db	0
-	dw	0
+	db	maze21>>16
+	dw	maze21&0ffffh
+		
 
 	db	"MAZE22"
-	db	0
-	dw	0
+	db	maze22>>16
+	dw	maze22&0ffffh
+	
 	
 	db	"MAZE23"
-	db	0
-	dw	0
+	db	maze23>>16
+	dw	maze23&0ffffh
+	
 	
 	db	"MAZE24"
-	db	0
-	dw	0
+	db	maze24>>16
+	dw	maze24&0ffffh
 	
 	db	"MAZE25"
-	db	0
-	dw	0
+	db	maze25>>16
+	dw	maze25&0ffffh
 	
 	db	"MAZE26"
-	db	0
-	dw	0
+	db	maze26>>16
+	dw	maze26&0ffffh
 	
 	db	"MAZE27"
-	db	0
-	dw	0
+	db	maze27>>16
+	dw	maze27&0ffffh
 	
 	db	"MAZE28"
-	db	0
-	dw	0
-															
+	db	maze28>>16
+	dw	maze28&0ffffh															
 	db	"MAZE29"
-	db	0
-	dw	0
+	db	maze29>>16
+	dw	maze29&0ffffh
 
 	db	"MAZE30"
-	db	0
-	dw	0
+	db	maze30>>16
+	dw	maze30&0ffffh
+	
 		
 	
 
