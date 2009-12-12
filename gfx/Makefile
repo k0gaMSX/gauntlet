@@ -1,7 +1,7 @@
 
 
 
-all:	select.tcf gtitle.tcf
+all:	select.tcf gtitle.tcf spr
 
 select.dat:  o.sr5 g-chars.sr5
 	rm -f g-chars.dat
@@ -22,9 +22,16 @@ gtitle.tcf: g-title.sr5
 	cp gtitle.tcf ..
 
 
+spr: 
+	make -C sprites
+	cp sprites/*.spr .
+
+
 .PHONY:	
 
 clean:
 	rm -f *.tcf  
 	rm -f *.dat
 	rm -f .??
+	rm -f *.spr
+	make -C sprites clean

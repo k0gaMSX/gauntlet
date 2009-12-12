@@ -1,7 +1,7 @@
 SRC=gauntlet.asm gaunt1.asm page1.asm page234.asm page567.asm tnilogo.rle
 TCF=select.tcf gtitle.tcf gaunt2.tcf gaunt3.tcf
-BIN=tnilogo.rle gaunt.2 gaunt.3
-
+BIN=tnilogo.rle
+SPR=elf1.spr elf2.spr war1.spr war2.spr val1.spr val2.spr wiz1.spr wiz2.spr
 
 test:	gauntlet.rom
 	openmsx gauntlet.rom -romtype ascii8 -machine msx2 -ext debugdevice 
@@ -10,22 +10,26 @@ test:	gauntlet.rom
 gauntlet.rom:	$(SRC) $(TCF) $(BIN) maze.bin
 	tniasm.linux gauntlet.asm
 
-gaunt3.tcf: gaunt3.asm deps
-	rm -f gaunt.3
+gaunt3.tcf: gaunt3.asm gauntlet.3 deps
+	rm -f gaunt3.tmp
 	cp gauntlet.3 gaunt.bin
 	tniasm.linux gaunt3.asm
-	dd if=gaunt.bin of=gaunt.3 bs=1 skip=7
-	wine tcpack gaunt.3 gaunt3.tcf
+	dd if=gaunt.bin of=gaunt3.tmp bs=1 skip=7
+	wine tcpack gaunt3.tmp gaunt3.tcf
 
-
-gaunt2.tcf: gaunt2.asm deps
-	rm -f gaunt.2
-	cp gauntlet.2 gaunt.bin
+gaunt2.tcf: gaunt2.asm gaunt.2 deps
+	cp gaunt.2 gaunt.bin
 	tniasm.linux gaunt2.asm
-	dd if=gaunt.bin of=gaunt.2 bs=1 skip=7
-	wine tcpack gaunt.2 gaunt2.tcf
+	dd if=gaunt.bin of=gaunt2.tmp bs=1 skip=7
+	wine tcpack gaunt2.tmp gaunt2.tcf
 
 
+gaunt.2:  deps $(SPR)
+	cp gauntlet.2 gaunt.2
+	dd if=war2.spr of=gaunt.2 conv=notrunc bs=1 count=768 seek=55 
+	dd if=val2.spr of=gaunt.2 conv=notrunc seek=1079 bs=1 count=768
+	dd if=wiz2.spr of=gaunt.2 conv=notrunc seek=2103 bs=1 count=768
+	dd if=elf2.spr of=gaunt.2 conv=notrunc seek=3127 bs=1 count=768	
 
 
 maze.bin:	maze/maze*
@@ -48,8 +52,13 @@ orig: gauntlet.1 gauntlet.2 gauntlet.3
 
 
 
-select.tcf gtitle.tcf:	
-	make -C gfx
+
+$(SPR):%.spr: graphic 
+	cp gfx/$@ .
+
+
+
+select.tcf gtitle.tcf:	graphic
 	cp gfx/$@ .
 
 
@@ -70,15 +79,18 @@ gauntlet%: orig/$@
 .PHONY:
 
 clean:
+	rm -f *.rom
 	rm -f *.tcf 
 	rm -f *.src
 	rm -f *.bin
+	rm -f *.tmp
 	rm -f gaunt.?
 	rm -f gauntlet.?
 	rm -f *.dsk
 	rm -f *.pat
 	rm -f *.col
 	rm -f tniasm.*
+	rm -f *.spr
 	make -C gfx clean
 	make -C dsk clean
 

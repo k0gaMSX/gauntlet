@@ -23,7 +23,7 @@ SpriteAttrib:	equ 	0d330h
 WriteVDP_Reg:	equ	0b4a9h	
 WaitTime:	equ	0A257h
 NWRVRM:		equ	177h				
-
+RowKeyb:	equ     847Fh
 
 
 ;;; Hay que trasladar los cambios de patrones
@@ -57,6 +57,11 @@ NWRVRM:		equ	177h
 	
 	forg 09578h-LdAddress
 	call	4014h		; Patch to read mazes from ROM
+        call    PutSlotRam      ;[95CDh]
+	ei
+        ld      iy,RowKeyb      ;[847Fh]
+        jp      0D000h          ;Esta es la direccion de ejecucion del bloque
+	
 
 
 
@@ -65,10 +70,10 @@ RamSlotPage1J:	equ	401Ah
 		
 	forg	095cdh-LdAddress
 	org	095cdh
+;;; PutSlotRam
 	call	RamSlotPage1J		; Put again ram pages
 	ld	a,(Rampage0)	
 	call	ENASLT_0
-	ei	
 	ret
 	
 
@@ -129,6 +134,7 @@ PutPal:
 
 
 PutColor0:
+	ret
 	ld	a,(Rg8sav)
 	res	5,A
 	ld	(Rg8sav),a
@@ -136,7 +142,6 @@ PutColor0:
 	out	(c),A
 	ld	A,128+8
 	out	(c),A
-	ret
 
 DisableSCR:	equ	0b5E9h
 PatternGenPers:	equ	2800h
@@ -296,8 +301,6 @@ RefreshScr:
 	call	ControlSound		;[0B468h]
 
 
-	ld	a,4
-	call	PutColorF
 	
         ld      a,1    
         ld      (RefreshON),a       ;[84D5h]
@@ -308,31 +311,24 @@ RefreshScr:
 	jr	nz,.315
 	ret
 
-
-	
 		
 RefreshScrI:
-	ld	a,0Fh
-	call	PutColorF
 	ld	de,1800h
-        call    WritePTR_VRAMI           ;[0B43Fh]
+	call	SetPtrVram	
         ld      hl,(PatternMapPtr)      ;[84D3h]
 	ld	b,0
 	call	WriteLinesSc4
 	call	WriteLinesSc4
 	ld	b,64
 	call	WriteLinesSc4
+	ret
 
-	call	RestoreSpriteColor
+	
+RefreshSpr:		
 	ld	de,1e00h
-        call    WritePTR_VRAMI           ;[0B43Fh]
+	call	SetPtrVram
         ld      hl,SpriteAttrib
 	ld	b,50h	;Si se pone 48 en lugar de 50 se queda colgado O_O
-
-	ld	a,1
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
 
 	nop
 	nop
@@ -354,9 +350,7 @@ RefreshScrI:
 	outi
 	jp	nz,.318		;[0A147h]	
 
-
 	
-	call	RestorePage	
 	ld	a,(0F3E0h)
 	ld	b,a
 	ld	a,1
@@ -420,7 +414,14 @@ VecIntP:
 	ld	a,(RefreshScrD)
 	or	a
 	jp	z,.oui
-	call	RefreshScrI	
+	
+	call	RefreshScrI
+	
+	call	PutSpritePage
+	call	RefreshSpr
+.t:	call	RestoreSpriteColor ; ,
+	call	Put2Sprites
+	call	RestorePage			
 	call	ChangePatPer
 
 	xor	a
@@ -435,6 +436,8 @@ VecIntP:
 	ei
 	ret
 
+
+	
 RestorePage:
 	ld	a,(vrampage)		
 SetPage:
@@ -448,21 +451,35 @@ vrampage:	db	0
 	
 	
 	
-		
+;;; Aqui hay casi 80h bytes libres
 
 
 	forg	0b801h-LdAddress
 	org	0b801h		
-	ret	; Este ret es para evitar la escritura 
+		
+	ret	; Este ret es para evitar la escritura
 		;;; de los datos de los personajes
 	;; 
 
 
+	
+
+	forg	085edh-LdAddress
+	org	085edh
+	
+ChangePatPJS:
+        ld      ix,DataPers1    ;[8420h]
+	ld	de,3800h
+        call    ChangePatPJ_1   ;[85FEh]
+        ld      ix,DataPers2    ;[8440h]
+	ld	de,3820h	; 
+
+ChangePatPJ_1:	equ $
 
 	forg	8555h-LdAddress
 	org	8555h
 			
-ChangePatPJS:	equ 85edh
+;;; ChangePatPJS:	equ 85edh
 ContItera:	equ 84d9h
 	
 		
@@ -660,7 +677,8 @@ ChangeWalls:
         jp      WriteVDP_Reg           ;[0B4A9h]
 	
 	
-	
+
+		
 ;;; Aqui hay mucho sitio para parches!!!!!!
 	
 
@@ -713,7 +731,6 @@ RELMEM:	equ 0f41fh
 	jp	8300h
 
 sc4:		
-
 	ld	a,(Rg0Sav)
 	and	11110001b
 	or	00000100b
@@ -750,9 +767,6 @@ ChangeWallColor: ; ESTOS VALORES SE PUEDEN PONER DIRECTAMENTE Y DEJAR ESPACIO
 	ld	b,58h		;'X'
 	call	MakeColorWall
 	ret
-
-	
-	
 	
 			
 		
@@ -797,34 +811,35 @@ WallSM_NL_L
 
 FillVRAMx8:	equ 0B693h
 
-	
-PutLineSP:
-	 ret
-	inc	e	
-	ld	a,7Fh
-	cp	l
-	jr	nz,.1
-	ld	hl,1D30h
-	jr	.2	
-.1:	ld	hl,1D20h
-.2:
-	push	de	
-	ex	de,hl
-	call    WritePTR_VRAMI	
-	di
-	ld	a,1
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
-	ei
-	pop	de
-	
-	ld	a,e
-	call	FillVRAMx8
-	call	FillVRAMx8
-	call	RestorePage
-	ret
 
+
+ENASLT_0:			; Is necessary move this function to page 2
+	di			; And this function is not working properly
+	push	af		; because it's necessary put first
+        and     3		; the slot in ffff
+        ld      b,a                     
+        in      a,(0A8h)                ; Read A8h slot port
+        and     011111100b              ; Ignore 0-1 bits
+        or      b
+        out     (0A8h),a                ; and set BIOS Slot
+
+	pop	af			; Check if EXPANDED Slot
+        ld      b,a
+        and     080h
+        ret	z	            ; No. Go to Next Rungame Routine
+
+        ld      a,b            ; Yes. Read 0FFFFh Expanded Slot Port.
+        and     000001100b
+        rrca
+        rrca
+        ld      b,a
+        ld      a,(0FFFFh)
+	cpl
+        and     011111100b         ; Ignore 0-1 actual bits (page 0)
+        or      b
+        ld      (0FFFFh),a          ; and set BIOS Slot
+	ret
+	
 
 InitScr:	equ 0b590h
 CleanVRAM:	equ 0b5d9h
@@ -908,32 +923,6 @@ PutBios:
 	
 	
 
-ENASLT_0:
-	di
-	push	af		
-        and     3
-        ld      b,a                     ; FCC1h BIOS Slot
-        in      a,(0A8h)                ; Read A8h slot port
-        and     011111100b              ; Ignore 0-1 bits
-        or      b
-        out     (0A8h),a                ; and set BIOS Slot
-
-	pop	af			; Check if EXPANDED Slot
-        ld      b,a
-        and     080h
-        ret	z	            ; No. Go to Next Rungame Routine
-
-        ld      a,b            ; Yes. Read 0FFFFh Expanded Slot Port.
-        and     000001100b
-        srl     a
-        srl     a
-        ld      b,a
-        ld      a,(0FFFFh)
-	cpl
-        and     011111100b         ; Ignore 0-1 actual bits (page 0)
-        or      b
-        ld      (0FFFFh),a          ; and set BIOS Slot
-	ret
 	
 
 
@@ -968,18 +957,40 @@ ReadPTR_VRAM:	equ 0B454h
 ;;; SOLUCIONADO!!!!!
 ;;; AHORA TAN SOLO FALTAN LOS SPRITES DE LOS PERSONAJES JUGADORES.
 	
-			
-RestoreSpriteColor:	
+
+	
+DATAPERS1:	equ 8420h
+DATAPERS2:	equ 8440h
+warspr:		equ 6000h
+valspr:		equ 6301h
+wizspr:		equ 6602h
+elfspr:		equ 6903h					
+PutSlotRam:	equ 95CDh	
+
+	
+PutSpritePage:				
 	di
 	ld	a,1 
 	out	(99h),a
 	ld	a,14+128
 	out	(99h),a
+	ret
 
+PutPatternPage:
+	di
+	xor	a
+	out	(99h),a
+	ld	a,128+14
+	out	(99h),a
+	ret
+			
+				
+RestoreSpriteColor:
 	ld	b,29
 	ld	hl,SpriteAttrib
 	ld	de,01c00h
-	call	WritePTR_VRAMI
+	call	SetPtrVram	
+
 
 .2:	ld	de,SpriteColorLT
 	inc	hl
@@ -992,33 +1003,156 @@ RestoreSpriteColor:
 	ld	h,0
 	ld	l,a
 	add	hl,de
-	ld	a,(hl)
+	ld	a,(hl)		
+	or	20h
+	
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a	
+	
 
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a			
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a			
-	out (98h),a
 	pop	hl
 	inc	hl
 	djnz	.2
-	call	RestorePage
+	ret
+
+
+	
+Put2Sprites:
+	call	PutBios
+	
+	ld	de,DATAPERS1	; Character data
+	ld	bc,3800h+32*30	; Cogo el patron 30
+	call	SndSprPat	; Put Pattern of 2nd spr
+	
+	ld	hl,SpriteAttrib+19*4	
+	ld	de,1c00h+20*16	; spritecolor	
+	ld	bc,1e00h+20*4	; spriteatt => y el sprite 19 (2º personaje)
+	ld	a,31*4		; Number of pattern
+	call	SndSprAtt
+	call	PutSlotRam	
 	ret
 	
+	call	PutSlotRam
+	ret
 
-SpriteColorLT:	db 2
-		db 11
+
+	
+;;; de -> Pointer to data
+;;; bc -> Pointer to vram pattern
+
+;;; HAY UN ERROR EN EL PARCHEO
+	
+SndSprPat:
+	ret
+	push	ix
+	ld	ixl,e
+	ld	ixh,d
+	push	bc	
+	ld	hl,13h
+	add	hl,de
+	ld	a,(hl)
+	or	a
+	jr	nz,.nowar
+	ld	hl,warspr
+	jr	.endc
+
+.nowar:	
+	cp	8
+	jr	nz,.noval
+	ld	hl,valspr
+	jr	.endc
+	
+.noval:	cp	10h
+	jr	nz,.nowiz
+	ld	hl,wizspr
+	jr	.endc
+
+.nowiz:	ld	hl,elfspr
+
+
+.endc:				; hl=ram pattern table
+	
+	ld	d,0
+	bit	6,(ix+0Eh)
+	jr	z,.15		;[8630h]
+
+	inc	d
+	bit	7,(ix+0Eh)
+	jr	z,.15		;[8630h]
+	inc	d
+
+.15:	ld	a,(ix+0Dh)
+        bit     0,(ix+0Eh)      
+	jr	z,.16		;[863Bh]
+	ld	a,4		; Ni puta idea de por que ...
+
+.16:	rrca
+	rrca
+	rrca
+        and     0E0h            
+	ld	e,a
+	add	hl,de		; hl=animation absolute address in ram
+	
+	call	PutPatternPage
+	pop	de
+	call	SetPtrVram
+
+	ld	bc,2098h
+	otir
+	
+	call	PutSpritePage
+	pop	ix
+	ret
+	
+color:		db 0
+	
+	
+;;; de -> colour address
+;;; bc -> attribute address
+		
+SndSprAtt:
+	push	af
+	push	hl			
+	push	bc	
+	call	SetPtrVram	; Put colour address
+
+	ld	a,1
+	or	60h
+	ld	bc,1098h
+.spplc:	out	(c),a		; Colour of character
+	djnz	.spplc
+
+.t:	pop	de	; Recovery attribute adress
+	call	SetPtrVram
+	pop	hl
+	ld	bc,298h
+	otir
+	pop	af
+	out	(98h),a				
+	ret
+
+
+
+
+
+	
+		
+SpriteColorLT:	db 2		; AQUI HAY QUE MODIFICAR
+		db 11		; LOS COLORES DE LOS PLAYERS!!!!!
 		db 4
 		db 4
 		db 6
@@ -1036,6 +1170,9 @@ SpriteColorLT:	db 2
 		db 9
 	
 		
+;               +0dh    -> Guarda la animacion actual del personaje
+		
+		
 	
 	
 RelocableCodeEnd: db 0	
@@ -1047,32 +1184,6 @@ RelocableCodeEnd: db 0
 	jp	InitScrP
 		
 		
-	forg 9AD4h-LdAddress
-	org 9AD4h
-	
-	
-GetPatSpPj:
-        ld      e,8             ;-A¨Es el Guerrero?-b
-	sub	8
-	jr	c,.242		;[9AE8h]
-
-        ld      e,4             ;-A¨Es la walkyria?-b
-	sub	8
-	jr	c,.242		;[9AE8h]
-
-        ld      e,0Ah           ;-A¨Es el mago?-b
-	sub	8
-	jr	c,.242		;[9AE8h]
-
-        ld      e,2             ;-A¨Es el elfo?-b
-.242:	ld	a,b
-	cp	2
-	jr	nc,.243		;[9AF4h]
-
-	bit	4,(iy+18h)
-	jr	z,.243		;[9AF4h]
-.243:	jp	PutLineSP
-	
 	
 	
 		

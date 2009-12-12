@@ -10,7 +10,14 @@
 ;       - Rellenar un bloque con un valor
 ;       - Copiar un bloque a otro sitio
 ;       - Substituir todas las ocurrencias de X por Y.
+;;; 
+;;; Patrones de sprites:
+;;; 0 -> personaje 0
+;;; 1 -> personaje 1
+;;; 30 -> disparo mago
+;;; 31 -> disparo mago
 
+	
 
 ;+-------------------------------+
 ;|         gauntlet.3            |
@@ -80,6 +87,8 @@ bios	macro	adr
 ;                            por el paso del tiempo.
 ;                       0 -> Es posible que indique que la vida del
 ;                            personaje ha cambiado por da¤o recibido
+;;;		+16h    Creo que se utiliza como contador en la secuencia
+;;;			de rotacion del paso de pantallas
 ;               +14h
 ;                       7 -> Indicativo de que el personaje tiene vida  (que
 ;                            que no es lo mismo que que estar jugando). AC-L
@@ -91,7 +100,12 @@ bios	macro	adr
 ;                               - Walkirie: 08h
 ;                               - Wizard:   10h
 :                               - Elf:      18h
-;               +0dh    -> Guarda la animacion actual del personaje
+;               +0dh    -> Guarda la animacion actual del personaje-NO:	Es solo
+;;;			   la direccion en la que se mueve
+;;;		+0eh    -> Comprobado por emulador:
+;;;			   Nible superior indica paso de animacion:
+;;;			   00h-40h-80h-c0h
+;;; 
 ;               +0eh    -> Creo que es un campo de bits, indicando que
 ;                          direcciones estan pulsadas, ademas de otras cosas
 ;                       7 -> Indica si se ha pulsado el disparo. AcL

@@ -28,7 +28,7 @@ p5load:	equ	6000h
 		
 %include "page1.asm"		; 1b20 bytes used
 %include "page234.asm"		; gtitle.tcf and select.tcf -> 17478
-%include "page567.asm"		; gaunt.2 and gaunt.3 -> 35424
+%include "page567.asm"		; gaunt.2 and gaunt.3 -> 
 %include "page8.asm"		; free page
 %include "page9plus.asm"	; Levels
 
