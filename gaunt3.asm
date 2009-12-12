@@ -1286,11 +1286,7 @@ LdirPat2:
 	
 RelocableCodeEnd: equ	$
 ;;; Fin de codigo conflictivo
-	
-	
-;;; db  9bh, 70h,00h, 60h,0cbh, 60h,0c0h,0c0h,     0b7h, 05h, 00h,0c0h,6bh,06h, 06h, 06h
-;;; db 0cbh,0c0h,60h,0c0h, 6bh, 60h, 60h, 60h,     0b6h, 06h, 06h,06h,0b6h,06h, 60h, 06h
-	
+		
 
 
 
@@ -1351,6 +1347,9 @@ RefreshScrD:	db 0
 
 ;;; La rutina de cambio de pocion especial es:	9f79
 
+
+
+	
         forg    958Eh-LdAddress
         org     958Eh
 
