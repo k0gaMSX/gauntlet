@@ -1,13 +1,14 @@
+SRC=gauntlet.asm gaunt1.asm page1.asm page234.asm tnilogo.rle
+TCF=select.tcf gtitle.tcf
+BIN=tnilogo.rle
 
 
+test:	gauntlet.rom
+	openmsx gauntlet.rom -machine msx2 -ext debugdevice
 
 
-#test:	gaunt.dsk
-#	openmsx gaunt.dsk -machine msx2 -ext debugdevice
-
-
-gauntlet.rom:	gaunt1.asm page2.bin page3.bin deps 
-
+gauntlet.rom:	$(SRC) $(TCF) 
+	tniasm.linux gauntlet.asm
 
 gaunt.3: gaunt3.asm deps
 	cp gauntlet.3 gaunt.bin
@@ -18,11 +19,6 @@ gaunt.2: gaunt2.asm deps
 	cp gauntlet.2 gaunt.bin
 	tniasm.linux gaunt2.asm
 	mv gaunt.bin gaunt.2
-
-gaunt.1: gaunt1.asm deps select.tcf
-	tniasm.linux gaunt1.asm
-	mv tniasm.out gaunt.1
-
 
 
 deps: graphic orig data

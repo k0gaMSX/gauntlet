@@ -14,7 +14,8 @@ section	code
 
 Init:	
 	call	SaveSlotC
-	call	RomSlotPage2	
+	call	RomSlotPage2
+	call	StartLogo
 	call	ShowIntro
 
 	ld	hl,gaunt.2
@@ -34,7 +35,7 @@ gaunt.3:	db	6,7,0
 
 %include "sys.asm"
 %include "gaunt1.asm"	
-
+%include "tnilogo.asm"
 	
 section		code			
 
