@@ -307,7 +307,7 @@ RefreshScrI:
 	ld	b,0
 	call	WriteLinesSc4
 	call	WriteLinesSc4
-	ld	b,64
+	ld	b,96
 	call	WriteLinesSc4
 	ret
 
@@ -747,6 +747,13 @@ RELMEM:	equ 0f41fh
 	forg 	08000h-LdAddress
 	org	08000h 
 
+	ld	a,-1
+	ld	hl,Spritecolorcache
+	ld	de,Spritecolorcache+1
+	ld	(hl),a
+	ld	bc,32
+	ldir
+	
 	call	7eh
 	di
 	ld	a,1
@@ -1025,40 +1032,68 @@ PutPatternPage:
 	out	(99h),a
 	ret
 			
-				
+	
+;;; ESTA RUTINA ESTA FALLANDO!!!!!! URGENTE!!!!!
+
+Spritecolorcache:	equ	0f806h
+					
 RestoreSpriteColor:
-	ld	b,16		
+	ld	b,32-8
 	ld	hl,SpriteAttrib+8*4
 	ld	de,01c00h+8*16
-	call	SetPtrVram	
-
-.2:	ld	de,SpriteColorLT
+	ld	(.ptr),de
+	ld	de,Spritecolorcache
+		
+.2:	push	de
 	inc	hl
 	inc	hl
 	inc	hl
-	ld	a,(hl)
 	push	hl
+	
+	ld	a,(hl)
+	ex	de,hl
+	cp	(hl)
+	jr	z,.3
+	
+	ld	(hl),a
+	push	af
+	ld	de,(.ptr)
+	call	SetPtrVram
+	pop	af	
 	cp	61h
 	jr	z,.write
-	and	0Fh
 
+	and	0Fh
+	ld	de,SpriteColorLT		
 	ld	h,0
 	ld	l,a
 	add	hl,de
-	ld	a,(hl)		
+	ld	a,(hl)
 	or	20h
-	
-.write:	ld	c,b
+
+		
+.write:	out	(2fh),a
+	ld	c,b
 	ld	b,16
 .loop:	out	(98h),a
 	djnz	.loop
 	ld	b,c	
 
-.3:	pop	hl
+	
+.3:	ld	hl,(.ptr)
+	ld	de,16
+	add	hl,de
+	ld	(.ptr),hl
+	pop	hl
+	pop	de
+	inc	de	
 	inc	hl
 	djnz	.2
 	ret
 
+.ptr:	dw	0
+
+	
 
 ;;; Move character 1 to 20 position
 ;;; Wrote pattern 2nd sprite player 1 at 6 pattern position
@@ -1146,9 +1181,10 @@ Put2Sprites:
 ;;; de -> Pointer to data
 ;;; bc -> Pointer to vram pattern
 
-;;; HAY UN ERROR EN EL PARCHEO
 	
 SndSprPat:
+	ld	a,8
+	ld	(6800h),a
 	push	ix
 	ld	ixl,e
 	ld	ixh,d
@@ -1189,7 +1225,7 @@ SndSprPat:
 .15:	ld	a,(ix+0Dh)
         bit     0,(ix+0Eh)      
 	jr	z,.16		;[863Bh]
-	ld	a,4		; Ni puta idea de por que ...
+	ld	a,4		
 
 .16:	rrca
 	rrca
