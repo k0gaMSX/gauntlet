@@ -85,8 +85,8 @@ Sc2toSc4:
 SetVRAM:	equ 0b5dch
 	
 Pallette:		
-	db 11h,1,73h,4,70h,0,44h,4,0,5,50h,3,27h,2,70h,6
-	db 70h,4,77h,7,40h,1,0,0,37h,5,57h,0,65h,0,76h,4
+	db 11h,1, 73h,4, 70h,0, 44h,4, 00h,5, 50h,3, 27h,2, 70h,6
+	db 70h,4, 77h,7, 40h,1, 00h,0, 37h,5, 57h,0, 65h,0, 76h,4
 
 PutPal:	
 	xor	a
@@ -190,7 +190,6 @@ InitPatScr:
 
 	forg 8545h-LdAddress
 	org 8545h
-		
 	nop			; Anular llamada a cambio de patron
 	nop 			; a
 	nop			; a
@@ -300,10 +299,11 @@ RefreshScrI:
 	call	WriteLinesSc4
 ;;; AÑADIR AQUI ACTUALIZACION DE SPRITES
 
+	call	RestoreSpriteColor
 	ld	de,1e00h
         call    WritePTR_VRAMI           ;[0B43Fh]
         ld      hl,SpriteAttrib
-	ld	b,50h		;'H'
+	ld	b,50h	;Si se pone 48 en lugar de 50 se queda colgado O_O
 
 	ld	a,1
 	out	(99h),a
@@ -429,7 +429,8 @@ vrampage:	db	0
 
 	forg	0b801h-LdAddress
 	org	0b801h		
-	ret			; Este ret es para evitar la escritura de los datos de los personajes
+	ret	; Este ret es para evitar la escritura 
+		;;; de los datos de los personajes
 	;; 
 
 
@@ -510,6 +511,12 @@ GetNamePJ:
 
 
 
+	forg	0b5c0h-LdAddress
+	org	0b5c0h
+	ld	de,1e00h
+
+
+	
 	forg 0b373h-LdAddress
 	org 0b373h
 	
@@ -517,10 +524,16 @@ GetNamePJ:
 
 	
 	forg 0b5b6h-LdAddress
-	org 0b5b6h
-	
+	org 0b5b6h	
 	ld b,09bh
 
+
+	forg 094c7h-LdAddress
+	org 094c7h
+	ld	(hl),220	; Modificacion para ocultar sprites
+
+
+	
 	forg 0b602h-LdAddress
 	org 0b602h
 
@@ -548,7 +561,7 @@ InitPJ:
 	
 	forg 0b79fh-LdAddress
 	org 0b79fh
-	ld	b,0abh
+	ld	b,0abh		; Rectificacion del color de marcador
 	
 	
 
@@ -680,7 +693,7 @@ RELMEM:	equ 0da00h
 	
 RelocableCode:		
 	org	RELMEM
-ChangeWallColor:		; ESTOS VALORES SE PUEDEN PONER DIRECTAMENTE Y DEJAR ESPACIO
+ChangeWallColor: ; ESTOS VALORES SE PUEDEN PONER DIRECTAMENTE Y DEJAR ESPACIO
 	pop	de
 	ld	hl,680h
 	add	hl,de
@@ -740,7 +753,8 @@ WallSM_NL_L
 FillVRAMx8:	equ 0B693h
 
 	
-PutLineSP:	
+PutLineSP:
+	 ret
 	inc	e	
 	ld	a,7Fh
 	cp	l
@@ -768,18 +782,172 @@ PutLineSP:
 
 
 InitScr:	equ 0b590h
+CleanVRAM:	equ 0b5d9h
+HideSprites:	equ 094c4h	
 	
-InitScrP:
-	ld	a,3
+InitScrP:			; Reubicada entera, hay espacio en la posicion
+	ld	a,3		; original
 	di
 	out	(99h),a
 	ld	a,4+128
 	out	(99h),a
 	call	DisableSCR
-	jp	InitScr+3
+	
+	ld	de,1800h
+        call    WritePTR_VRAMI           ;[0B43Fh]
+
+        sub     a                                               
+.557:   out     (98h),a         
+	inc	a
+	jr	nz,.557		;[0B59Ah]
+
+.558:   out     (98h),a         
+	inc	a
+	jr	nz,.558		;[0B59Fh]
+
+.559:   out     (98h),a         
+	inc	a
+        cp      60h             
+	jr	nz,.559		;[0B5A4h]
+
+	ld	de,0
+	ld	b,0
+        call    CleanVRAM         ;[0B5D9h]      ;Limpio la tabla de definicion
+                                                ;de patrones
+        ld      de,2000h                        ;La tabla de definicion de 
+        ld      b,09bh          ;               ;los colores
+        call    CleanVRAM        ;[0B5D9h]
+
+	ld	b,80h		;'P'
+        call    HideSprites           ;[94C4h]        
+                                                
+	ld	de,1e00h
+        call    WritePTR_VRAMI  ;[0B43Fh]
+
+	di
+	ld	a,1
+	out	(099h),a
+	ld	a,128+14
+	out	(99h),a
+	ei
+	
+        ld      hl,SpriteAttrib ;Escribo las caracteristica de 20 sprites
+        ld      b,80h           
+.560:	outi
+	jp	nz,.560		;[0B5CBh]
+	call	RestorePage
+	
+        ld      a,(0F3E0h)      ;Esto no es correcto!!!!!
+	ld	b,a
+	ld	a,1
+        jp      WriteVDP_Reg    ;[0B4A9h]
+
+
+	
+
+	
+
+
+ReadPTR_VRAM:	equ 0B454h		
+
+;;; ESTA FUNCION NO ES NECESARIA!!!!!!
+;;; LO QUE HAY QUE HACER ES CREAR UNA TABLA DE COLORES QUE EMULE
+;;; A LA PALETA DE SC2!!!!!!!!!!!!!!!!
+;;; NO. EL PROBLEMA ESTA EN QUE NO SE ACTUALIZA EL CAMPO DE COLOR
+;;; EN SPRITE ATTRIBUTE. NO SE POR QUE.
+;;; COMPROBADO EN EL ORIGINAL QUE ESE ES EL COMPORTAMIENTO NORMAL
+;;; ESCRIBE EN ALGUN MOMENTO EN MEDIO DEL CODIGO SIN TENER EN CUENTA
+;;; LA TABLA SPRITEATTRIBUTE
+	
+;;; ESTA FUNCION ESTA MAL PORQUE NO SELECCIONA LA PAGINA ANTES
+;;; DE ESCRIBIR:	 LA TABLA DE SPRITES ESTA EN PAGINA 1
+;;; ------------------------------------------------------------
+;;; YA HE CONSEGUIDO QUE SE COPIE EL COLOR DESDE LA TABLA
+;;; DE ATRIBUTOS A LA TABLA DE COLORES. AHORA EL PROBLEMA RESIDE
+;;; EN QUE LA TABLA DE ATRIBUTOS NO TIENE BIEN PUESTO EL COLOR
+	
+;;; Probando a partir de ruptura en 9298(comprobar olision de disparo)
+;;; PARECE QUE EL PROBLEMA VIENE DE QUE EN EL ORIGINAL LA ESCRITURA
+;;; DE LOS SPRITES SE HACIA FUERA DE LA INTERRUPCION. EL PROBLEMA RESIDE EN
+;;; QUE DESPUES DEL PUNTO DONDE EL ESCRIBIA, TOCA DE NUEVO LA TABLA.
+;;; EL JUEGO MODIFICA LA TABLA DE ATRIBUTOS DESPUES DE LA FUNCION 
+;;;   9093,9327,905b
+;;; EL JUEGO ESCRIBE EN LA TABLA DE ATRIBUTOS RAM ENTRE LAS FUNCIONES:
+;;; 1. ProcessPJ y DecLifePJ
+;;; 2. Entre las posiciones 9327 y 905b => Sucede en las dos versiones
+;;; En affe sigue el valor escrito en RAM
+;;; SOLUCIONADO!!!!!
+;;; AHORA TAN SOLO FALTAN LOS SPRITES DE LOS PERSONAJES JUGADORES.
 	
 			
+RestoreSpriteColor:	
+	di
+	ld	a,1 
+	out	(99h),a
+	ld	a,14+128
+	out	(99h),a
 
+	ld	b,32
+	ld	hl,SpriteAttrib
+	ld	de,01c00h
+	call	WritePTR_VRAMI
+
+.2:	ld	de,SpriteColorLT
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	a,(hl)
+	and	0Fh
+
+	push	hl
+	ld	h,0
+	ld	l,a
+	add	hl,de
+	ld	a,(hl)
+
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a			
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a
+	out (98h),a			
+	out (98h),a
+	pop	hl
+	inc	hl
+	djnz	.2
+	call	RestorePage
+	ret
+	
+
+SpriteColorLT:	db 2
+		db 11
+		db 4
+		db 4
+		db 6
+		db 12
+		db 10
+		db 13
+	
+		db 2
+		db 1
+		db 8
+		db 7
+		db 4
+		db 1
+		db 3
+		db 9
+	
+		
+	
 	
 RelocableCodeEnd: db 0	
 	
