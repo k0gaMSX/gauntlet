@@ -45,11 +45,13 @@ NWRVRM:		equ	177h
 	
 	forg	8400h-LdAddress
 	org	8400h
-	jp	0b90fh	;evito inicio
+	jp	0b90fh		;evito inicio
 	
 
-
-
+	forg	0b38ah-LdAddress
+	ret			;avoid tape message 
+	
+ 
 SetPtr_VRAM:	equ	0b444h		
 
 	
@@ -105,10 +107,11 @@ PutPal:
 	ret
 
 
-PutColor0:		
+PutColor0:
 	ld	a,(Rg8sav)
-	set	5,A
+	res	5,A
 	ld	(Rg8sav),a
+	ld	c,99h
 	out	(c),A
 	ld	A,128+8
 	out	(c),A
@@ -654,13 +657,13 @@ WallColorList:	db 70h,5,40h,2
 ;;; BUSCAR SITIO PARA METER ESTA RUTINA
 ;;; ESTA USADA -> ESTE TROZO HACE QUE SE CUELGUE SI SE PONE EN LA DIRECCION CORRECTA
 
-RELMEM:	equ 0da00h
+RELMEM:	equ 0f41fh
 	
 	forg 	08000h-LdAddress
 	org	08000h 
 
 	call	7eh
-     	call	PutColor0	
+	call	PutColor0
 	di
 	ld	a,1
 	out	(99h),a
@@ -864,9 +867,34 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
         jp      WriteVDP_Reg    ;[0B4A9h]
 
 
+EXPTBL:		equ 0fcc1h
 	
+PutBios:			
+	di
+        ld      a,(EXPTBL)
+        and     3
+        ld      b,a                     ; FCC1h BIOS Slot
+        in      a,(0A8h)                ; Read A8h slot port
+        and     011111100b              ; Ignore 0-1 bits
+        or      b
+        out     (0A8h),a                ; and set BIOS Slot
 
-	
+        ld      a,(EXPTBL)              ; Check if EXPANDED Slot
+        ld      b,a
+        and     080h
+        ret     z             ; No. Go to Next Rungame Routine
+
+        ld      a,b            ; Yes. Read 0FFFFh Expanded Slot Port.
+        and     000001100b
+        srl     a
+        srl     a
+        ld      b,a
+        ld      a,(0FFFFh)
+	cpl
+        and     011111100b         ; Ignore 0-1 actual bits (page 0)
+        or      b
+        ld      (0FFFFh),a          ; and set BIOS Slot
+	ret
 
 
 ReadPTR_VRAM:	equ 0B454h		

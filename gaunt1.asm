@@ -952,8 +952,6 @@ ColourSFX:
 	
 
 
-	
-
 
 waitKB:			
 .loop:	
@@ -1374,8 +1372,109 @@ LEE_JOY:
         and     1Fh
         ret
 	
+
+
+
+
+
+; in: hl = source
+;     de = destination
+; changes: af,af',bc,de,hl,ix
+
+UnTCF:: ld      ix,-1           ; last_m_off
+
+        ld      a,[hl]          ; read first byte
+        inc     hl
+        scf
+        adc     a,a
+        jr      nc,.endlit
+
+.litlp: ldi
+.loop:  call    GetBit
+        jp      c,.litlp
+.endlit:
+
+        push    de              ; save dst
+        ld      de,1
+.moff:  call    GetBit
+        rl      e
+        rl      d
+        call    GetBit
+        jr      c,.gotmoff
+        dec     de
+        call    GetBit
+        rl      e
+        rl      d
+        jp      nc,.moff
+        pop     de              ; end of compression
+        ret
+
+.gotmoff:
+        ex      af,af'
+        ld      bc,0            ; m_len
+        dec     de
+        dec     de
+        ld      a,e
+        or      d
+        jr      z,.prevdist
+        ld      a,e
+        dec     a
+        cpl
+        ld      d,a
+        ld      e,[hl]
+        inc     hl
+        ex      af,af'
+        ; scf - carry is already set!
+        rr      d
+        rr      e
+        ld      ixl,e
+        ld      ixh,d
+        jp      .newdist
+.prevdist:
+        ex      af,af'
+        ld      e,ixl
+        ld      d,ixh
+        call    GetBit
+.newdist:
+        jr      c,.mlenx
+        inc     bc
+        call    GetBit
+        jr      c,.mlenx
+
+.mlen:  call    GetBit
+        rl      c
+        rl      b
+        call    GetBit
+        jp      nc,.mlen
+        inc     bc
+        inc     bc
+.gotmlen:
+        ex      af,af'
+        ld      a,d
+        cp      -5
+        jp      nc,.nc
+        inc     bc
+.nc:    inc     bc
+        inc     bc
+        ex      af,af'
+
+        ex	[sp],hl		; save src, and get dst in hl, de = offset
+        ex      de,hl           ; de = dst, hl = offset
+        add     hl,de           ; new src = dst+offset
+        ldir
+        pop	hl		; get src back
+        jp      .loop
+
+.mlenx: call    GetBit
+        rl      c
+        rl      b
+        jp      .gotmlen
+
+
 	
-		
+	
+	
+			
 
 ; decompresses to VRAM
 ; in: hl = source
@@ -1384,7 +1483,23 @@ LEE_JOY:
 ; changes: af,af',bc,de,hl,ix
 ; note: does NOT check for CE. destination must be 80h aligned.
 
-UnTCFV::ld      ix,-1           ; last_m_off
+UnTCFV:
+	push	af
+	push	de
+	push	hl
+	push	bc
+	ld	hl,hmmc_sh
+	ld	de,hmmc
+	ld	bc,11
+	ldir
+	pop	bc
+	pop	hl
+	pop	de
+	pop	af
+
+	
+	
+	ld      ix,-1           ; last_m_off
 
 	ld	a,d
         rla
@@ -1416,8 +1531,8 @@ UnTCFV::ld      ix,-1           ; last_m_off
 .di1:	di
         out     [99h],a
         ld      a,17+128
-	ei
         out     [99h],a
+	ei	
 	push	hl
         ld      hl,hmmc
         ld      bc,0B9Bh
@@ -1427,8 +1542,8 @@ UnTCFV::ld      ix,-1           ; last_m_off
 .di2:	di
 	out     [99h],a
         ld      a,17+128
-	ei
         out     [99h],a
+	ei	
         ex	af,af'
 	jp	.loop
 
@@ -1456,8 +1571,8 @@ UnTCFV::ld      ix,-1           ; last_m_off
 .di3:	di
 	out	[99h],a
 	ld	a,46+128
-	ei
 	out	[99h],a
+	ei
 
         pop     de              ; end of compression
         ret
@@ -1535,8 +1650,8 @@ UnTCFV::ld      ix,-1           ; last_m_off
 .di5:   out     [99h],a
         ld      a,h
         and     00111111b
-	ei
         out     [99h],a
+	ei	
 	
 	inc	hl
 	sbc	hl,de

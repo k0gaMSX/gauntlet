@@ -3194,6 +3194,7 @@ S94D0:  call    Rand           ;[0B4E1h]
 	ld	(iy+37h),a
 	ld	(iy+38h),0Ch
 	ret
+	
 ;::===============================::
 ;||          SUBROUTINE           ||
 ;::===============================::
@@ -8090,14 +8091,14 @@ WaitInitGame:  ei
 	ret	nz
 	ld	a,8
 	out	(0ABh),a	;Unknown port
-	ld	ix,TB3AF	;[0B3AFh]
+	ld	ix,TB3AF	; Tape text
 
-	ld	de,600h
-        call    PrintText           ;[8EA0h]
+	ld	de,600h		; Print TAPE REWIND text 
+        call    PrintText           
 	ld	de,800h
-        call    PrintText           ;[8EA0h]
+        call    PrintText           
 	ld	de,0A00h
-        call    PrintText           ;[8EA0h]
+        call    PrintText           
 
 .532:   call    ReadJoyKB           ;[0B40Bh]
 	bit	0,(iy+8)

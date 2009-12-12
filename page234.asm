@@ -24,6 +24,6 @@ p2end:		ds	p2padd,0
 p2endf:		equ $	
 
 %if p2size > pagsize*3
-   %warn "Page 0 boundary broken"
+   %warn "Page 234 boundary broken"
 %endif
 	

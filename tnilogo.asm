@@ -46,7 +46,8 @@ InitialWait:	equ	27
 
 
 
-StartLogo:	ld      a,[FCC1h]
+StartLogo:		
+	ld      a,[FCC1h]
         ld      hl,002Dh
         call    000Ch
         cp      3

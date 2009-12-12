@@ -12,25 +12,20 @@ section	code
 	dw	Init
 	dw	0,0,0,0,0,0,0,0
 
-Init:	
+Init:
+	ld	sp,0f660h
 	call	SaveSlotC
-	call	RomSlotPage2
-	call	StartLogo
+	call	searchramnormal
+	call	SetIntroPages
+	call	StartLogo	
 	call	ShowIntro
 
-	ld	hl,gaunt.2
-;;; call	LoadBin
-	ld	hl,gaunt.3
-;;; call	LoadBin
+	call	SetBloadPages
+	call	LoadFirstBload
+	call	SetBloadPages
+	call	LoadSecondBload	
 	ret
 
-
-IntroPages:	db	1,2,3,0
-gaunt.2:	db	4,5,0
-gaunt.3:	db	6,7,0			
-	
-	
-		
 
 
 %include "sys.asm"
