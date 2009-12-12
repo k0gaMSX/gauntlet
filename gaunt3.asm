@@ -36,16 +36,12 @@ RowKeyb:	equ     847Fh
 	dw	8000h
 	dw	0ca20h
 	dw	8000h
-
-
-;;; forg	8400h-LdAddress
-;;; org	8400h
-;	jp	0b90fh		;evito inicio
 	
 
         forg    83d0h-LdAddress
         org     83d0h   
-        jp      0b90fh           ; evito rutina de slot	
+        jp      0b90fh           ; evito rutina de slot
+		
 	
 	forg	0b38ah-LdAddress
 	ret			;avoid tape message 
@@ -61,7 +57,7 @@ RowKeyb:	equ     847Fh
         ld      iy,RowKeyb      ;[847Fh]
         jp      0D000h          ;Esta es la direccion de ejecucion del bloque
 	
-
+	
 
 
 SaveSP:		equ	0dffdh	
@@ -312,7 +308,7 @@ RefreshScrI:
 	call	WriteLinesSc4
 	call	WriteLinesSc4
 	ld	b,96
-	call	WriteLinesSc4
+;;; call	WriteLinesSc4   ;DEPURACION
 	ret
 
 	
@@ -725,10 +721,7 @@ ChangeWalls:
        	ei
 	jp	ChangeWallColor
 	
-	
-	
-
-		
+			
 ;;; Aqui hay mucho sitio para parches!!!!!!
 	
 
@@ -917,11 +910,10 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
 
 	
 .559:   ld	e,a
-	xor	a
+;;; xor	a			;DEPURACION
 	out     (98h),a
 	ld	a,e
 	inc	a
-;;;	cp      60h
 	jr	nz,.559		;[0B5A4h]
 
 	ld	de,0
@@ -1044,9 +1036,9 @@ PutPatternPage:
 Spritecolorcache:	equ	0f806h
 					
 RestoreSpriteColor:
-	ld	b,32-8
-	ld	hl,SpriteAttrib+8*4
-	ld	de,01c00h+8*16
+	ld	b,32
+	ld	hl,SpriteAttrib
+	ld	de,01c00h
 	ld	(.ptr),de
 	ld	de,Spritecolorcache
 		
@@ -1102,23 +1094,6 @@ RestoreSpriteColor:
 
 	
 	
-SpriteColorLT:	db 2		
-		db 11		
-		db 4
-		db 4
-		db 6
-		db 12
-		db 10
-		db 13
-	
-		db 2
-		db 1
-		db 8
-		db 7
-		db 4
-		db 1
-		db 3
-		db 9
 		
 
 ;;; Move character 1 to 20 position
@@ -1200,8 +1175,9 @@ Put2Sprites:
 .end:	call	PutSlotRam
 	ret
 
-
 	
+	
+		
 ;;; de -> Pointer to data
 ;;; bc -> Pointer to vram pattern
 
@@ -1268,16 +1244,6 @@ SndSprPat:
 	call	PutSpritePage
 	pop	ix
 	ret
-	
-color:		db 0
-
-	
-		
-;;; hl -> Atributo
-;;; de -> colour address
-;;; bc -> attribute address
-;;; a  -> Numero de patron
-;;; (attcolor) -> color
 
 
 ;;; hl -> Atributo
@@ -1295,25 +1261,52 @@ SndSprAtt:
         out     (98h),a
         ret
 
+LdirPat2:		
+        pop     hl
+        ld      de,28E8h+1000h
+        ld      bc,18h
+        ldir
+
+        ld      de,2A88h+1000h
+        ld      c,8
+        ldir	
+	ret
+	
 
 	
 	
+
+			
 		
 	
-		
-		
 	
-	
-RelocableCodeEnd: db 0	
+RelocableCodeEnd: equ	$
 	
 ;;; Fin de codigo conflictivo
 
 	forg	InitScr-LdAddress
 	org	InitScr
 	jp	InitScrP
-		
-		
-	
+SpriteColorLT:  db 2
+                db 11
+                db 4
+                db 4
+                db 6
+                db 12
+                db 10
+                db 13
+
+                db 2
+                db 1
+                db 8
+                db 7
+                db 4
+                db 1
+                db 3
+                db 9	
+
+
+
 	
 		
 	forg 0b45bh-LdAddress
@@ -1325,4 +1318,41 @@ RelocableCodeEnd: db 0
 VectorInt:
 	jp	VecIntP
 RefreshScrD:	db 0
+
+;;; La rutina de cambio de pocion especial es:	9f79
+
+        forg    958Eh-LdAddress
+        org     958Eh
+
+LdirPat:
+	push	hl
+	push	hl        
+        ld      de,28E8h             ;copiamos los patrones de las
+        ld      bc,18h               ;salidas a 4 y 8
+        ldir    
+
+        ld      de,2A88h             ;El patron del Ex
+        ld      c,8                  ;
+        ldir
+
+        ld      de,20E8h             ;El patron del IT
+        ld      c,18h                ;ademas del de la sidra
+        ldir
+
+        ld      de,2288h
+        ld      c,8
+        ldir
+
+	pop     hl
+        ld      de,28E8h+800h
+        ld      bc,18h
+        ldir
+
+        ld      de,2A88h+800h
+        ld      c,8
+        ldir
+	jp	LdirPat2
 	
+	
+
+

@@ -4806,7 +4806,7 @@ S9DE4:	ld	a,(ix+2)
 	push	de
 	ld	de,2808h
 	ld	bc,60h
-	ldir
+	ldir	
 	ld	a,(ix+2)
 	and	38h		;'8'
 	rrca
@@ -5009,7 +5009,7 @@ S9F27:  ld      a,(PantActual)       ;[8403h]
 	call	S9EFC		;[9EFCh]
 	call	S9F09		;[9F09h]
 	set	4,(iy-2)
-	call	S9F79		;[9F79h]
+	call	ChangeSpetialPotion		;[9F79h]
 .296:	bit	6,(iy-1)
 	ret	nz
 .297:   call    Rand           ;[0B4E1h]
@@ -5033,10 +5033,14 @@ S9F27:  ld      a,(PantActual)       ;[8403h]
 	pop	bc
 	djnz	.300		;[9F60h]
 	ret
+
+
+	
 ;::===============================::
 ;||          SUBROUTINE           ||
 ;::===============================::
-S9F79:	ld	a,c
+ChangeSpetialPotion:	
+	ld	a,c
 	sub	19h
 	rlca
 	push	af
@@ -5067,6 +5071,8 @@ S9FA1:	ld	(de),a
 	inc	de
 	djnz	S9FA1		;[9FA1h]
 	ret
+
+	
 ;::===============================::
 ;||      Indexed entry point      ||
 ;::===============================::
@@ -8249,7 +8255,8 @@ ReadPSG:
 ;Entrada: a -> Columna de la matriz que se quiere leer
 ;salida:  a -> Estado de la columna que se lee
 
-ReadRowKB:  ld      c,a
+ReadRowKB:  
+	ld      c,a
 	di
 	in	a,(0AAh)	;PPI port C (misc ctrl)
 	and	0F0h		;'ð'
@@ -8257,7 +8264,6 @@ ReadRowKB:  ld      c,a
 	out	(0AAh),a	;PPI port C (misc ctrl)
 	ei
 	in	a,(0A9h)	;Keyboard row scan
-.533	equ	$-1
 	ret
 
 ;::===============================::
@@ -9503,7 +9509,7 @@ InitGame:
 	ld	(0D380h),a
 
         call    HideAllSprites  ;[94C2h]
-        call    SBA26           ;[0BA26h]    ;Sigue reubicando cosas
+        call    SavePotionPattern           ;[0BA26h]    ;Sigue reubicando cosas
 
         ld      sp,PatternMap   ;[0C000h]    ;
         call    InitAttSp           ;[0B483h]    ;
@@ -9573,7 +9579,8 @@ TBA06:  db 0b9h,'p',0
 ;||          SUBROUTINE           ||
 ;::===============================::
 
-SBA26:	ld	de,600h
+SavePotionPattern:	
+	ld	de,600h
 	ld	hl,28E8h
 	ld	bc,18h
 	ldir
