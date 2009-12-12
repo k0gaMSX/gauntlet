@@ -1,4 +1,4 @@
-%include "tniasm.inc"
+n%include "tniasm.inc"
 %include "z80r800.inc"
 %include "z80().inc"
 
@@ -45,6 +45,7 @@ RowKeyb:	equ     847Fh
         forg    83d0h-LdAddress
         org     83d0h   
         jp      0b90fh           ; evito rutina de slot
+	
 		
 	
 	forg	0b38ah-LdAddress
@@ -205,6 +206,7 @@ InitPatScr:
 	
 .pointer:	dw	0
 
+	
 	;; AQUI HAY ALGO DE SITIO LIBRE
 	
 
@@ -1275,14 +1277,30 @@ LdirPat2:
         ld      c,8
         ldir	
 	ret
-	
+
+LdirSpetialPotion:
+	push	hl
+	push	hl
+	ld	de,2970h
+	ld	bc,10h
+	ldir
+
+	pop	hl
+	ld	de,2970h+800h
+	ld	c,10h
+  	ldir
+
+
+	pop	hl
+	ld	de,2970h+1000h
+	ld	c,10h
+ 	ldir
+	ret
 
 	
-	
+	;; Aqui no queda ni un solo byte libre
 
-			
-		
-	
+
 	
 RelocableCodeEnd: equ	$
 ;;; Fin de codigo conflictivo
@@ -1299,8 +1317,8 @@ RelocableCodeEnd: equ	$
 
 	
 
-	forg 09fa6h-LdAddress
-;;; db  0,0
+	forg 09fa6h-LdAddress	;Parche para meter la nueva tabla de colores
+;;; db  0,0                     ;de las pociones especiales
 ;;; La funcion de cambio de pociones especiales esta en ChangeSpetialPotion:	
 	
 		
@@ -1308,7 +1326,6 @@ RelocableCodeEnd: equ	$
 
 	
 		
-
 
 	forg	InitScr-LdAddress
 	org	InitScr
@@ -1345,10 +1362,31 @@ VectorInt:
 	jp	VecIntP
 RefreshScrD:	db 0
 
-;;; La rutina de cambio de pocion especial es:	9f79
+
+
+	forg 	9F89h-LdAddress	;Parche para copiar el patron en todas las pantallas
+	org	9F89h
+ 	call	LdirSpetialPotion
+	nop
+	nop
+
+
+	forg	9f3dh-LdAddress	;Parche para que haya pocion en todas las pantallas > 8
+	org 	9f3dh
+	nop
+	nop
+
+
+	
+	forg	0baa4h-LdAddress ;Nuevas rutinas para copiar los patrones especiales
+	org	0baa4h
+;;; Aqui se pueden meter rutinas pero para ello primero hay que asegurarse
+;;; de que nunca se llega aqui
 
 
 
+
+	
 	
         forg    958Eh-LdAddress
         org     958Eh
