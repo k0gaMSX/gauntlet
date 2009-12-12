@@ -54,7 +54,7 @@ StartLogo:
         jr      c,.Z80
 	ld	a,[FCB1h]	; disable pause key
 	res	1,a
-	;out	[A7h],a
+	out	[A7h],a
 .Z80:
 
 	
