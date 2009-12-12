@@ -1,4 +1,4 @@
-n%include "tniasm.inc"
+%include "tniasm.inc"
 %include "z80r800.inc"
 %include "z80().inc"
 
@@ -221,7 +221,26 @@ InitPatScr:
 	forg 0b546h-LdAddress
 	org  0b546h
 	jp InitPatScr
+LdirSpetialPotion:
+	push	hl
+	push	hl
+	ld	de,2970h
+	ld	bc,10h
+	ldir
 
+	pop	hl
+	ld	de,2970h+800h
+	ld	c,10h
+  	ldir
+
+
+	pop	hl
+	ld	de,2970h+1000h
+	ld	c,10h
+ 	ldir
+	ret
+
+	
 
 ;;; Necesario para el color del fondo
 	
@@ -980,34 +999,6 @@ PutBios:
 
 ReadPTR_VRAM:	equ 0B454h		
 
-;;; ESTA FUNCION NO ES NECESARIA!!!!!!
-;;; LO QUE HAY QUE HACER ES CREAR UNA TABLA DE COLORES QUE EMULE
-;;; A LA PALETA DE SC2!!!!!!!!!!!!!!!!
-;;; NO. EL PROBLEMA ESTA EN QUE NO SE ACTUALIZA EL CAMPO DE COLOR
-;;; EN SPRITE ATTRIBUTE. NO SE POR QUE.
-;;; COMPROBADO EN EL ORIGINAL QUE ESE ES EL COMPORTAMIENTO NORMAL
-;;; ESCRIBE EN ALGUN MOMENTO EN MEDIO DEL CODIGO SIN TENER EN CUENTA
-;;; LA TABLA SPRITEATTRIBUTE
-	
-;;; ESTA FUNCION ESTA MAL PORQUE NO SELECCIONA LA PAGINA ANTES
-;;; DE ESCRIBIR:	 LA TABLA DE SPRITES ESTA EN PAGINA 1
-;;; ------------------------------------------------------------
-;;; YA HE CONSEGUIDO QUE SE COPIE EL COLOR DESDE LA TABLA
-;;; DE ATRIBUTOS A LA TABLA DE COLORES. AHORA EL PROBLEMA RESIDE
-;;; EN QUE LA TABLA DE ATRIBUTOS NO TIENE BIEN PUESTO EL COLOR
-	
-;;; Probando a partir de ruptura en 9298(comprobar olision de disparo)
-;;; PARECE QUE EL PROBLEMA VIENE DE QUE EN EL ORIGINAL LA ESCRITURA
-;;; DE LOS SPRITES SE HACIA FUERA DE LA INTERRUPCION. EL PROBLEMA RESIDE EN
-;;; QUE DESPUES DEL PUNTO DONDE EL ESCRIBIA, TOCA DE NUEVO LA TABLA.
-;;; EL JUEGO MODIFICA LA TABLA DE ATRIBUTOS DESPUES DE LA FUNCION 
-;;;   9093,9327,905b
-;;; EL JUEGO ESCRIBE EN LA TABLA DE ATRIBUTOS RAM ENTRE LAS FUNCIONES:
-;;; 1. ProcessPJ y DecLifePJ
-;;; 2. Entre las posiciones 9327 y 905b => Sucede en las dos versiones
-;;; En affe sigue el valor escrito en RAM
-;;; SOLUCIONADO!!!!!
-;;; AHORA TAN SOLO FALTAN LOS SPRITES DE LOS PERSONAJES JUGADORES.
 	
 
 	
@@ -1278,29 +1269,12 @@ LdirPat2:
         ldir	
 	ret
 
-LdirSpetialPotion:
-	push	hl
-	push	hl
-	ld	de,2970h
-	ld	bc,10h
-	ldir
-
-	pop	hl
-	ld	de,2970h+800h
-	ld	c,10h
-  	ldir
-
-
-	pop	hl
-	ld	de,2970h+1000h
-	ld	c,10h
- 	ldir
-	ret
-
 	
-	;; Aqui no queda ni un solo byte libre
+	
 
-
+			
+		
+	
 	
 RelocableCodeEnd: equ	$
 ;;; Fin de codigo conflictivo
@@ -1380,6 +1354,9 @@ RefreshScrD:	db 0
 	
 	forg	0baa4h-LdAddress ;Nuevas rutinas para copiar los patrones especiales
 	org	0baa4h
+
+
+	
 ;;; Aqui se pueden meter rutinas pero para ello primero hay que asegurarse
 ;;; de que nunca se llega aqui
 
