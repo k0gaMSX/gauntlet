@@ -1,99 +1,854 @@
 %include "z80r800.inc"
 %include "z80__.inc"
 
-MainLoop:	equ	0b258h
-SetPtrVram:	equ	0b444h
-NumSP:		equ	800h
-WriteSpPat:	equ	0ba6fh
-WritePortRW:	equ	0b587h
-VramSpAtt:	equ	5e00h
-VramSpColour:	equ	5c00h	 
-Rg0Sav:		equ	0f3dfh
-Rg4Sav:		equ	0f3dfh+4
-LdAddress:	equ	8000h-7
-Rg8sav:		equ	0FFE7h
-PutColorF:	equ	0B4a6h
-PatternMapPtr:	equ	84d3h
-RefreshON:	equ	84d5h
-WritePtr_VRAMI:	equ	0b43fh
-ControlSound:	equ	0b468h	
-SpriteAttrib:	equ 	0d330h
-WriteVDP_Reg:	equ	0b4a9h	
-WaitTime:	equ	0A257h
-NWRVRM:		equ	177h				
+CALSLT  equ     001Ch
+CHGMOD  equ     005Fh
+SUBSLT  equ     0FAF8h
+EXBRSA  equ     0FCC1h
+RG0SAV	equ	0F3DFh
+RG1SAV	equ	0F3E0h
+RG8SAV	equ	0FFE7h
+LINEINT equ	140
+CHGET	equ	009FH
+SNSMAT	equ	0141H	
+WRTPSG	equ	093H
+RDPSG	equ	096H
+TIMEFADE equ	3
+
+	
+	
+	org	a000h 
+	db	0feh
+	dw	Init
+	dw	End
+	dw	Init
+
+	
+Init:	ld	a,14h
+	out	(2eh),a
+	call	InitVDP
+
+	call	ColourSFX
+	call	SelectChars	
+		
+
+
+	xor	a
+	call	initscr
+	ret
 
 
 
-;;; Hay que trasladar los cambios de patrones
-;;; a todas las paginas (pociones, jamon y todo eso
-;;; LA FUNCION QUE SE ENCARGA DE ACTUALIZAR POSICION SPRITE PERSONAJE
-;;; DoViewPJs
+TIME:		db	0
+PAL_GM:		DS	32,0	
+PAL_NEGRO:	DS	32,0
+PALETAD1:	DW	0
+PALETAW1:	DS	32,0
+
+	
+
+
+  	
+SelectChars:
+	ld	hl,gchars
+	ld	de,8000h
+	scf
+	call	UnTCFV
+
+	
+	CALL	WAIT_COM
+	ld	hl,copyscr	
+	CALL	COPYVRAM
+	ld	a,3
+	call	VER_PAGE
+	call	BuildHand
+	LD	HL,SelectPallette
+	call	FADE_ON
+
+	call	showCart
+	call	hideCart
+.loop:		
+	ei
+	halt
+	call	MoveHand
+	call	PutHand
+	jr	.loop
+
+
+	
+copyscr:	db	0,0,  0,3,   0,0,  0,1,  255,0, 0,1, 0,0, 0d0h
+copyline:	db	0,0,  212,3, 80,0, 80,3, 96,0,  1,0, 0,0, 0d0h
+copylineI:	db	80,0, 0,1,   80,0, 0,3,  96,0,  1,0, 0,0, 0d0h
+
+
+hideCart:
+
+	ld	e,80
+	ld	d,80+43
+	ld	b,43/2+2
+
+.1:	ei
+	halt
+	
+	ld	a,e
+	inc	e
+	ld	(copylineI+2),a
+	ld	(copylineI+6),a
+	exx
+	CALL	WAIT_COM
+	ld	hl,copylineI
+	CALL	COPYVRAM
+	exx
+ 
+    	
+	ld	a,d
+	dec	d
+	ld	(copylineI+2),a
+	ld	(copylineI+6),a
+	exx
+	CALL	WAIT_COM
+	ld	hl,copylineI  
+	CALL	COPYVRAM
+	exx
+	djnz .1
+
+	ei
+	halt
+
+	ld	a,80+43/2+2
+	ld	(copylineI+2),a
+	ld	(copylineI+6),a
+	call	WAIT_COM
+	ld	hl,copylineI
+	call	COPYVRAM
+	ret
+	 
+	
+
+	
+showCart:
+	ld	a,212+43/2+1
+	ld	(copyline+2),a
+	ld	a,80+43/2+1
+	ld	(copyline+6),a
+	CALL	WAIT_COM
+	ld	hl,copyline
+	call	COPYVRAM
+
+	ld	e,212+43/2
+	ld	d,212+43/2+2
+	ld	h,80+43/2+1
+	ld	l,80+43/2+1
+	ld	b,43/2
+
+.1:	ei
+	halt
+		
+	
+	ld	a,e
+	dec	e
+	ld	(copyline+2),a
+	ld	a,h
+	dec	h
+	ld	(copyline+6),a
+	exx
+	CALL	WAIT_COM
+	ld	hl,copyline
+	CALL	COPYVRAM
+	exx
+
+	
+	ld	a,d
+	inc	d
+	ld	(copyline+2),a
+	ld	a,l
+	inc	l
+	ld	(copyline+6),a
+	exx
+	CALL	WAIT_COM
+	ld	hl,copyline
+	CALL	COPYVRAM
+	exx
+	djnz .1
+	ret
+		
+	
+
+MoveHand:	
+	call	ST_AMPL	
+	ld	a,(JOYPORT1)
+	ld	b,a
+	ld	a,(JOYPORT2)
+	or	b
+
+	ld	hl,OffsetX
+	bit	2,a
+	jr	z,.derecha
+	ld	b,a
+	ld	a,(COOR_XY+1)
+	or	a
+	ld	a,b	
+	jr	z,.derecha
+	dec	(hl)
+	
+.derecha:	
+	bit	3,a
+	jr	z,.abajo
+	ld	b,a
+	ld	a,(COOR_XY+1)
+	cp	224
+	ld	a,b
+	jr	z,.abajo
+	inc	(hl)	
+
+.abajo:	ld	hl,OffsetY
+	bit	1,a
+	jr	z,.arriba
+	ld	b,a
+	ld	a,(COOR_XY)
+	cp	182
+	ld	a,b	
+	jr	z,.arriba
+	inc	(hl)
+
+.arriba:		
+	bit	0,a
+	ret	z
+	ld	a,(COOR_XY)
+	or	a
+	ret	z
+	dec	(hl)
+	ret
+
+
+
+	
+OffsetX:	db	0
+OffsetY:	db	0	
+
+
+
+PutHand: 
+	ld	hl,COOR_XY
+	ld	b,8
+	
+.loop:		
+	ld	e,(hl)
+	ld	a,(OffsetY)
+	add	a,e
+	ld	(hl),a
+	inc	hl
+	ld	e,(hl)
+	ld	a,(OffsetX)
+	add	a,e
+	ld	(hl),a
+	inc	hl
+	inc	hl
+	inc	hl 
+	djnz	.loop
+	
+	ld	a,1
+	ld	hl,COOR_XY
+	ld	de,03600h	
+	ld	bc,32
+	call	wvram
+	xor	a
+	ld	(OffsetX),a
+	ld	(OffsetY),a
+	ret
+	
+		
+
+
+
+
+
+	
+
+;NOMBRE: COPYVRAM
+;OBJETIVO: COPIAR UN BLOQUE DE VRAM A VRAM
+;	     Tambien es usada para otros comandos con igual
+;	     numero de parametros.
+;ENTRADA: HL -> PUNTERO A LOS DATOS DEL COPY.
+
+
+COPYVRAM:	
+	DI
+	LD	A,32
+	OUT	(99h),A
+	LD	A,128+17
+	OUT	(99h),A
+
+	LD	C,9Bh
+	LD	B,15
+	OTIR
+	EI
+	RET
+
+;NOMBRE: TESTCOM
+;AUTOR: ROBERTO VARGAS CABALLERO
+;OBJETIVO: ESTA FUNCIOM COMPRUEBA SI  SE ESTA EJECUTANDO UN COMANDO DEL VDP
+;SALIDA: Z: SI SE HA ACABADO EL COMANDO Z VALDAR 0, EN CASO CONTRARIO VALDRA 1
+;MODIFICA: AF,AF',C
+
+
+TESTCOM:	LD	C,99h
+	LD	A,2
+	DI
+	OUT	(C),A
+	LD	A,128+15
+	OUT	(C),A
+	IN	A,(C)
+	EX	AF,AF'
+	XOR	A
+	OUT	(C),A
+	LD	A,128+15
+	OUT	(C),A
+	EI
+	EX	AF,AF'
+	BIT	0,A
+	RET
+
+
+
+
+;NOMBRE: WAIT_COM
+;OBJETIVO: ESPERAR HASTA QUE SE PRODUZCA EL FINAL DE UN COMANDO DEL VDP
+
+
+WAIT_COM:	CALL	TESTCOM
+	JR	NZ,WAIT_COM
+	RET
 
 
 	
 	
-	fname	"gaunt.bin",0
 	
-	forg	8400h-LdAddress
-	org	8400h
-	jp	0b90fh	;evito inicio
+;NOMBRE: FADE_OFF
+;OBJETIVO: HACER UN FADE A NEGRO DE LA PALETA ACTUAL
+
+
+FADE_OFF:	
+	LD	DE,PALETAW1
+	LD	BC,32
+	LDIR
+	LD	HL,PAL_NEGRO
+	LD	(PALETAD1),HL
+	JR	PUT_FADET
 
 
 
+;NOMBRE: FADE_ON
+;OBJETIVO: HACER UN FADE DE NEGRO A LA PALETA ACTUAL
 
-SetPtr_VRAM:	equ	0b444h		
+
+FADE_ON:
+	EXX	
+	LD	HL,PAL_NEGRO
+	LD	DE,PALETAW1
+	LD	BC,32
+	LDIR
+	EXX
+	LD	(PALETAD1),HL
+
+
+PUT_FADET:	LD	B,16	;ESTA LA QUE REALMENTE SE ENCARGA DE
+;                                       ;HACER LOS FADES
+PFADE_OFFB:	
+	PUSH	BC
+PFADE_OFFW:		
+	LD	A,(TIME)
+	OR	A
+	JR	NZ,PFADE_OFFW
+
+	LD	DE,(PALETAD1)
+	LD	IX,PALETAW1
+	LD	HL,PALETAW1
+	CALL	DOFADE
+
+
+
+	LD	HL,PALETAW1
+	LD	DE,PAL_GM
+	LD	BC,32
+	LDIR
+
+	DI
+	LD	A,TIMEFADE
+	LD	(TIME),A
+	EI
+
+	POP	BC
+	DJNZ	PFADE_OFFB
 
 	
-  
-;CAMBIO DE SC2 a SC4
 
-	forg	0b9e3h-LdAddress
-	jp	Sc2toSc4
+	RET
 
-	forg	0b8e1h-LdAddress
-	org	0b8e1h
+
+
+
+
+
+;NOMBRE: DOFADE
+;OBJETIVO: REALIZA UN PASO DE FADE ENTRE DOS PALETAS
+;ENTRADA: HL -> PALETA INICIAL
+;         DE -> PALETA DESTINO
+;SALIDA: (IX)-> RESULTADO DEL FADE
+
+
+
+
+DOFADE:	LD	B,32
+
+DOFADE1:		
+	PUSH	BC
+	LD	A,(HL)
+	AND	7
+	LD	C,A
+	LD	A,(DE)
+	AND	7
+	CP	C
+	JR	Z,DOFADEIG
+	JR	C,DOFADEMAY
+	INC	C
+	JR	DOFADEIG
+DOFADEMAY:		
+	DEC	C
+
+DOFADEIG:		
+	LD	A,(HL)
+	AND	070H
+	LD	B,A
+	LD	A,(DE)
+	AND	070H
+	CP	B
+	JR	Z,DOFADEIG2
+	JR	C,DOFADEMAY2
+	LD	A,B
+	ADD	A,16
+	LD	B,A
+	JR	DOFADEIG2
+DOFADEMAY2:		
+	LD	A,B
+	SUB	16
+	LD	B,A
+DOFADEIG2:		
+	LD	A,C
+	ADD	A,B
+	LD	(IX),A
+	INC	IX
+	INC	HL
+	INC	DE
+	POP	BC
+	DJNZ	DOFADE1
+
+	RET
+
+
+
+
+
+
+
 	
-Sc2toSc4:
-	di	
-	ld	a,(Rg0Sav)
-	and	11111001b
-	or	00000100b
-	ld	(Rg0Sav),a
+COOR_XY: 
+	 db 60,60
+	 db 0,0
+	 db 60,76
+	 db 4,0
+	 db 76,60
+	 db 8,0
+	 db 76,76
+	 db 12,0
 
-	ld	c,99h
-	out	(c),a
-	ld	a,128
-	out	(c),a	;Screen 4 is set
+		
+	 db 60,60
+	 db 16,0
+	 db 60,76
+	 db 20,0
+	 db 76,60
+	 db 24,0
+	 db 76,76
+	 db 28,0
+		
 
-	call	PutColor0
 
-	ld	a,10111111b
-	out	(c),a
-	ld	a,128+5
-	out	(c),a
-	ld	hl,Pallette
+COLOR0_OFF:	DI
+	LD	A,(RG8SAV)
+	SET	5,A
+	LD	(RG8SAV),A
+	OUT	(99h),A
+	LD	A,128+8
+	OUT	(99h),A
+	EI
+	RET
+
+
+Interrupt:
+	push	af
+	in	a,(99h)
+	add	a,a
+	jp	c,oldvector1
+
+	ld	a,1		;PONEMOS EL REGISTRO DE ESTADO 1  
+	out	(99h),a		;PARA COMPROBAR EL VALOR DEL FLAG
+	ld	a,128+15	;INTERRUPCION HORIZONTAL
+	out	(99h),a
+
+	in	a,(99h)
+	rrca
+	jp	nc,endint
+
+	push	hl
+	push	de
+	push	bc
+	
+	ld	a,2
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+
+	ld	b,29*3
+	ld	hl,PalletteSFX
+	ld	a,(pointer)
+	ld	(aux),a
+	inc	a
+	and	3fh
+	ld	c,a
+
+	ld	a,(counter)
+	inc	a
+	ld	(counter),a
+	and	03h
+	ld	a,c
+	jp	nz,.1
+	
+	ld	(pointer),a
+	ld	(aux),a
+.1:	
+;;; out	(2fh),a
+	add	a,a	
+	ld	e,a
+	ld	d,0
+	add	hl,de
+	ld	c,9ah
+	
+
+.loop:
+
+	ld	a,1
+	call	ChangeColor
+
+	ld	hl,PalletteSFX
+	ld	a,(aux)
+	inc	a
+	and	3fh
+	ld	(aux),a
+	add	a,a
+	ld	e,a
+	ld	d,0
+	add	hl,de
+	
+.waitnhr:		
+	in	a,(99h)
+	and	20h
+	jp	nz,.waitnhr
+
+		
+
+.waithr:		
+	in	a,(99h)
+	and	20h
+	jp	z,.waithr
+
+	outi
+	outi		
+	djnz	.loop
+
+	pop	bc
+	pop	de
+	pop	hl
+	
+	
+
+endint:
+
+	xor	a
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+	pop	af
+	ei
+	reti
+
+
+Pointer:	db	0
+counter:	db	0
+aux:		db	0
+PalletteSFX:	
+	db	00h,0
+	db	10h,0
+	db	20h,0
+	db	30h,0
+	db	40h,0
+	db	50h,0
+	db	60h,0
+	db	70h,0
+
+	db	70h,0		; 8
+	db	71h,0		
+	db	72h,0	
+	db	73h,0
+	db	74h,0
+	db	75h,0
+	db	76h,0
+	db	77h,0
+
+	db	77h,0		; 16
+	db	67h,0		
+	db	57h,0
+	db	47h,0
+	db	37h,0
+	db	27h,0
+	db	17h,0
+	db	07h,0
+
+	db	07h,0		; 24
+	db	07h,1		
+	db	07h,2
+	db	07h,3
+	db	07h,4
+	db	07h,5
+	db	07h,6
+	db	07h,7
+
+	db	07h,7		; 32
+	db	06h,7		
+	db	05h,7
+	db	04h,7
+	db	03h,7
+	db	02h,7
+	db	01h,7
+	db	00h,7
+
+	db	00h,7		; 40
+	db	10h,7
+	db	20h,7
+	db	30h,7
+	db	40h,7
+	db	50h,7
+	db	60h,7
+	db	70h,7
+
+
+	db	70h,7		; 48
+	db	60h,7
+	db	50h,7
+	db	40h,7
+	db	30h,7
+	db	20h,7
+	db	10h,7
+	db	00h,7
+	
+	db	00h,7		; 56
+	db	00h,6
+	db	00h,5
+	db	00h,4
+	db	00h,3
+	db	00h,2
+	db	00h,1
+	db	00h,0	
+	
+oldvector1:
+	ld	a,(TIME)
+	or	a
+	jp	z,.2
+	dec	a
+	ld	(TIME),a
+
+.2:	
+	
+	LD	HL,PAL_GM
+	CALL	PutPal
+		
+	pop	af
+	ei
+	reti
+oldvector:
+	db	0,0,0,0,0
+newvector:
+	jp	Interrupt
+	
+
+
+	
+	
+		
+ColourSFX:
+	ld	a,2
+	call	VER_PAGE
+	ld	hl,PAL_NEGRO
 	call	PutPal
-	jp	MainLoop
-
-
-
-
-
-	forg 0ba8dh-LdAddress
-	org 0ba8dh
-
-SetVRAM:	equ 0b5dch
 	
-Pallette:		
-	db 11h,1, 73h,4, 70h,0, 44h,4, 00h,5, 50h,3, 27h,2, 70h,6
-	db 70h,4, 77h,7, 40h,1, 00h,0, 37h,5, 57h,0, 65h,0, 76h,4
+	ld	hl,0fd9ah
+	ld	de,oldvector
+	ld	bc,5
+	di
+	ldir
+	ei
 
-TitlePallette:
-	db  00h,0, 00h,5, 02h,0, 40h,2, 14h,0, 27h,0, 50h,0, 37h,4
-	db  70h,0, 73h,4, 70h,6, 74h,7, 03h,4, 62h,3, 50h,2, 77h,7
+	ld	hl,newvector
+	ld	de,0fd9ah
+	ld	bc,5
+	di
+	ldir
+	ei
+
+	ld	a,LINEINT
+	call	SETVDP_LI
+	ld	hl,TitlePallette
+	CALL	FADE_ON	
+	call	waitKB
+	call	waitnKB
+	CALL	RESVDP_LI
+	LD	HL,TitlePallette
+	call	FADE_OFF	
+	ret
 	
 
-PutPal:	
+colourSfxFlag:	db	0
+	
+
+
+waitKB:			
+.loop:	
+	call	ST_AMPL	
+	ld	a,(JOYPORT1)
+	ld	b,a
+	ld	a,(JOYPORT2)
+	or	b
+	ret	nz
+	jr	.loop
+
+	
+waitnKB:	
+.loop:	
+	call	ST_AMPL	
+	ld	a,(JOYPORT1)
+	ld	b,a
+	ld	a,(JOYPORT2)
+	or	b
+	ret	z
+	jr	.loop
+		
+
+	
+			
+InitVDP:	
+	ld	a,5
+	call	initscr
+	call    SET_SPD16
+	call	COLOR0_OFF
+	xor	a	
+	call	SET_CFONDO
+	ld	hl,TitlePallette
+	ld	de,PAL_GM
+	ld	bc,32
+	ldir
+	ret
+	
+
+BuildHand:	
+	ld	l,230
+	ld	a,1
+	ld	de,3600h
+	ld	bc,4*32
+	call	svram
+
+	
+	ld	l,13
+	ld	a,1
+	ld	de,03400h
+	ld	bc,64
+	call	svram
+	
+	ld	l,0
+	ld	a,1
+	ld	de,03440h
+	ld	bc,64
+	call	svram
+		
+	ld	a,1
+	ld	hl,hand
+	ld	de,03800h
+	ld	bc,100h
+	call	wvram
+	
+	ld	a,1
+	ld	hl,COOR_XY
+	ld	de,03600h	
+	ld	bc,32
+	call	wvram	
+	ret
+
+
+
+VIS_ON:	DI
+	LD	A,(RG1SAV)
+	SET	6,A
+	LD	(RG1SAV),A
+	OUT	(99h),A
+	LD	A,128+1
+	OUT	(99h),A
+	EI
+	RET
+
+	
+
+VIS_OFF:	
+	DI
+	LD	A,(RG1SAV)
+	RES	6,A
+	LD	(RG1SAV),A
+	OUT	(99h),A
+	LD	A,128+1
+	OUT	(99h),A
+	EI
+	RET
+
+
+	
+	
+;NOMBRE: SET_CFONDO
+;OBJETIVO: COLOCAR UN COLOR DE FONDO.
+;ENTRADA: A -> COLOR
+;MODIFICA: A
+
+
+SET_CFONDO:	
+	DI
+	OUT	(99h),A
+	LD	A,128+7
+	OUT	(99h),A
+	EI
+	RET
+
+
+	
+ChangeColor:	
+	di
+	out	(99h),a
+	ld	a,128+16
+	out	(99h),a
+
+	ret
+		
+	
+	
+		
+	
+PutPal:	di
 	xor	a
 	out	(99h),a
 	ld	a,128+16
@@ -101,903 +856,508 @@ PutPal:
 	ld	b,32
 	ld	c,9Ah
 	otir
-	ld	de,3000h
-	ld	hl,800h
-	ld	b,0bbh
-	call	SetVRAM
 	ei
 	ret
+	
+Pallette:		
+	db 11h,1, 73h,4, 70h,0, 44h,4, 00h,5, 50h,3, 27h,2, 70h,6
+	db 70h,4, 77h,7, 40h,1, 00h,0, 37h,5, 57h,0, 65h,0, 76h,4
 
-
-PutColor0:		
-	ld	a,(Rg8sav)
-	set	5,A
-	ld	(Rg8sav),a
-	out	(c),A
-	ld	A,128+8
-	out	(c),A
-	ret
-
-DisableSCR:	equ	0b5E9h
-PatternGenPers:	equ	2800h
-WritePortRW_8:	equ	0b585h
-PatternMap:	equ	0c000h					
-
-
-
-;;; Rutina reubicada  -> espacio libre en la posicion original
+ColorChange:	db	0	
+TitlePallette:
+	db  00h,0, 00h,6, 02h,0, 40h,2, 14h,0, 27h,0, 50h,0, 37h,4
+	db  70h,0, 73h,4, 70h,6, 74h,7, 03h,4, 62h,3, 50h,2, 77h,7
+		
+SelectPallette:
+	db  11h,1, 00h,0, 00h,6, 44h,7, 07h,2, 37h,4, 50h,0, 47h,6  
+	db  70h,0, 73h,4, 70h,6, 74h,7, 00h,4, 62h,3, 55h,5, 77h,7  
 
 	
-InitPatScr:
-        call    DisableSCR           ;[0B5E9h]
+	
+		
+VER_PAGE:
+	DI	
+	LD HL,PAGE0
+	LD C,A
+	LD B,0
+	ADD HL,BC
+	LD A,(HL)
+	
+	OUT	(99h),A
+	LD	A,128+2
+	OUT	(99h),A
+	EI
+	RET
 
-	ld	hl,PatternGenPers
-	ld	(.pointer),hl
-	ld	b,3
-	xor	a
-.0:	push	bc
-	push	af
+PAGE0:		DB 00011111B
+PAGE1:		DB 00111111B 
+PAGE2:		DB 01011111B
+PAGE3:		DB 01111111B		
+	
+	
+			  	
 
-	ld	de,0
-	call    SetPtr_VRAM           ;[0B444h]
+SET_SPD16:	DI
+	LD	A,(RG1SAV)
+	SET	1,A
+	LD	(RG1SAV),A
+	OUT	(99h),A
+	LD	A,128+1
+	OUT	(99h),A
+	EI
+	RET
 
-	ld	b,3
-.1:	push	bc
-	ld      hl,(.pointer)       ;Copio a VRAM 800 bytes de patrones :	2800
-        ld      bc,98h                  ;del banco 1
-        call    WritePortRW_8           ;[0B585h]
-	pop	bc
-	djnz	.1
+	
+SETVDP_LI:	
+	DI
+	OUT	(99h),A
+	LD	A,128+19
+	OUT	(99h),A
 
-	ld	hl,(.pointer)
-	ld	a,8
-	add	a,h
-	ld	h,a
-	ld	(.pointer),hl
-	pop     af
-	inc	a
-	ld	b,a
-	call	SetPage
-	ei
+	LD	A,(RG0SAV)
+	SET	4,A
+	OUT	(99h),A
+	LD	A,128+0
+	OUT	(99h),A
+	RET
+
+
+;NOMBRE: RESVDP_LI
+;OBJETIVO: DESACTIVAR LAS INTERRUPCIONES HORIZONTALES
+
+
+RESVDP_LI:	DI
+	LD	A,(RG0SAV)
+	RES	4,A
+	OUT	(99h),A
+	LD	A,128+0
+	OUT	(99h),A
+	EI
+	RET	
+		
+
+
+
+;;; Parametros de entrada
+;;; hl -> Direccion RAM
+;;; de -> Direccion VRAM
+;;; bc -> contador;
+;;; a -> Pagina
+	
+
+wvram:	call	setVram
+	call	WriteVRAM
+	ret
+
+
+svram:	call	setVram
+	call	FillVRAM
+	ret
+	
+
+FillVRAM:
 	ld	a,b
-	pop	bc
-	djnz	.0
+	or	c
+	ret	z
+
+	ld	a,l	
+.FillVRAM1:		
+	out	(98h),a
+	dec	bc
+	jp	nz,FillVRAM
 	
 
+	
+		
+WriteVRAM:
+	ld	d,b
+	ld	e,c
+	ld	c,98h
+	
 	xor	a
-	call	SetPage
-	ei
-
-	
-	ld	de,2000h
-        call    SetPtr_VRAM           ;[0B444h]
-
-        ld      hl,2000h              ;y hago lo mismo con 200 bytes de la 
-        ld      bc,98h                ;tabla de colores del banco 1  
-        call    WritePortRW_8           ;[0B585h]
-
-	ld	hl,2000h
-	ld	bc,98h
-        call    WritePortRW_8           ;[0B585h]
-
-	ld	hl,2000h
-	ld	bc,98h
-        call    WritePortRW_8           ;[0B585h]
-	
-        ld      hl,PatternGenPers
-        ld      de,PatternMap        ;[0C000h]
-	ld	bc,800h
-	ldir
+	or	d
+	ld	b,0
+	jr	z,.end
+.loop:	otir
+	dec	d
+	jr	nz,.loop	
+			
+.end:	ld	b,e
+	otir
 	ret
 	
-.pointer:	dw	0
+		
+SetVram:	
+	DI	
+	PUSH	AF
+	LD	A,E	;Y ENVIRLA COMO PUNTERO RAM
+	OUT	(99h),A	;AL VDP
+	LD	A,D	
+	AND	3Fh
+	OR	40h
+	OUT	(99h),A	
+                                     
+
+	POP	AF		; AHORA ESCRIBO LA PAGINA
+	OUT	(99h),A	    
+	LD	A,128+14	
+	OUT	(99h),A	   
+	EI
+	RET
 	
-
-	forg 8545h-LdAddress
-	org 8545h
-	nop			; Anular llamada a cambio de patron
-	nop 			; a
-	nop			; a
-
-	
-
-	forg 0b546h-LdAddress
-	org  0b546h
-	jp InitPatScr
-
-
-;;; Necesario para el color del fondo
 	
 	
-	forg	0b483h-LdAddress
-	org	0b483h  
-	ld      (8489h),sp      ;[8489h]
-	ld	b,22h
-	ld	sp,0D323h
-	ld	de,0
-;
-.548:   push    de
-        push    de
-        push    de
-        push    de
-        push    de
-        push    de
-        push    de
-        push    de
-        push    de
-        push    de
-        push    de        
-        push    de
-        djnz    .548
-        ld      sp,(8489h)
+		
+InitScr:	
+	ld	iy,(EXBRSA-1)
+	ld	ix,CHGMOD
+	call	CALSLT
+	ret
 
-	nop
-	nop
-	nop
+
 	
-        ld	a,0bh           ;Coloca el borde negro
+	
+	
+ST_AMPL:
+
+        ld      e,8Fh           ;'~O'
+        call    LEE_JOY           ;[88DEh]
+        ld      (JOYPORT1),a       ;[9439h]
+        ld      e,0CFh          ;'-bÏ'-A
+        call    LEE_JOY           ;[88DEh]
+        ld      (JOYPORT2),a       ;[943AH]
+
+        push    bc
+        push    af
+
+        ld      b,0
+        ld      a,8
+        call    SNSMAT
+        bit     0,a
+        jr      nz,nojoy
+        set     4,b
+
+nojoy:
+        and     0f0h
+        bit     7,a     ;leeR
+        jr      nz,LEE_JOY_D
+        set     3,a
+
+LEE_JOY_D:
+        bit     6,a
+        jr      nz,LEE_JOY_U
+        set     1,a
+LEE_JOY_U:
+        bit     5,a
+        jr      nz,LEE_JOY_L
+        set     0,a
+LEE_JOY_L:
+        bit     4,a
+        jr      nz,LEE_JOY_2
+        set     2,a
+	
+LEE_JOY_2:
+        and     0fh
+	or	b
+		
         ld      b,a
-        ld      a,7
-        ld      c,99h
-        or      80h
-        di
-        out     (c),b
-        out     (c),a
-        ei
+
+        ld      hl,JOYPORT1
+        or      (hl)
+        ld      (hl),a
+
+        ld      a,b
+
+        ld      hl,JOYPORT2
+        or      (hl)
+        ld      (hl),a
+
+        pop     af
+        pop     bc
+        ret
+	
+
+
+		
+LEE_JOY:
+        ld      a,0Fh
+        call    WRTPSG
+        ld      a,0Eh
+        call    RDPSG
+        cpl
+        and     1Fh
+        ret
+	
+	
+JOYPORT1:	db	0
+JOYPORT2:	db	0				
+	
+		
+
+; decompresses to VRAM
+; in: hl = source
+;     de = destination
+;     cf = carry 0 for low 64K, 1 for high 64K
+; changes: af,af',bc,de,hl,ix
+; note: does NOT check for CE. destination must be 80h aligned.
+
+UnTCFV::ld      ix,-1           ; last_m_off
+
+	ld	a,i		; get interrupts enable state
+	ld	a,0
+        jp      po,.imod
+	ld	a,FBh
+.imod:	ld	[.ei1],a
+	ld	[.ei2],a
+	ld	[.ei3],a
+	ld	[.ei4],a
+	ld	[.ei5],a
+
+	ld	a,d
+        rla
+        rla
+        and	00000011b
+        ld	[.hmmc+3],a
+        and     00000010b
+        ld      [.hmod],a
+
+	ld	a,e
+	add	a,a
+	ld	a,d
+	adc	a,a
+	ld	[.hmmc+2],a
+
+        ld      a,[hl]          ; read first byte
+        inc     hl
+        scf
+        adc     a,a
+        ;jr      nc,.endlit
+
+	ex	af,af'
+	ld	a,[hl]
+	inc	hl
+        ld	[.hmmc+8],a
+	inc	de
+
+        ld      a,36                    ; start HMMC
+.di1:	di
+        out     [99h],a
+        ld      a,17+128
+.ei1:	ei
+        out     [99h],a
+	push	hl
+        ld      hl,.hmmc
+        ld      bc,0B9Bh
+        otir
+        pop	hl
+        ld      a,44+128                ; continue HMMC
+.di2:	di
+	out     [99h],a
+        ld      a,17+128
+.ei2:	ei
+        out     [99h],a
+        ex	af,af'
+	jp	.loop
+
+.litlp: outi
+        inc     de
+
+.loop:  call    GetBit
+        jp      c,.litlp
+.endlit:
+
+        push    de              ; save dst
+        ld      de,1
+.moff:  call    GetBit
+        rl      e
+        rl      d
+        call    GetBit
+        jr      c,.gotmoff
+        dec     de
+        call    GetBit
+        rl      e
+        rl      d
+        jp      nc,.moff
+
+	xor	a		; stop HMMC
+.di3:	di
+	out	[99h],a
+	ld	a,46+128
+.ei3:	ei
+	out	[99h],a
+
+        pop     de              ; end of compression
         ret
 
+.gotmoff:
+        ex      af,af'
+        ld      bc,0            ; m_len
+        dec     de
+        dec     de
+        ld      a,e
+        or      d
+        jr      z,.prevdist
+        ld      a,e
+        dec     a
+        cpl
+        ld      d,a
+        ld      e,[hl]
+        inc     hl
+        ex      af,af'
+        ; scf - carry is already set!
+        rr      d
+        rr      e
+        ld      ixl,e
+        ld      ixh,d
+        jp      .newdist
 
+.mlenx: call    GetBit
+        rl      c
+        rl      b
+        jp      .gotmlen
 
-;;; *********************************************************************
-;;;
-;;;
-;;;  Rutina de refresco
-;;;
-;;;
-;;; ********************************************************************
+.prevdist:
+        ex      af,af'
+        ld      e,ixl
+        ld      d,ixh
+        call    GetBit
+.newdist:
+        jr      c,.mlenx
+        inc     bc
+        call    GetBit
+        jr      c,.mlenx
 
+.mlen:  call    GetBit
+        rl      c
+        rl      b
+        call    GetBit
+        jp      nc,.mlen
+        inc     bc
+        inc     bc
+.gotmlen:
+        ex      af,af'
+        ld      a,d
+        cp      -5
+        jp      nc,.nc
+        inc     bc
+.nc:	inc     bc
+        inc     bc
 
-	forg 0a083h-LdAddress
-	org 0a083h
+	ex	[sp],hl		; save src, and get dst in hl, de = offset
+        ex      de,hl           ; de = dst, hl = offset
+        add     hl,de           ; new src = dst+offset
+
+        ld      a,h
+        and     11000000b
+        rlca
+.hmod:	equ     $+1
+        or      0
+        rlca
+.di4:	di
+        out     [99h],a
+        ld      a,14+128
+.ei4:	ei
+        out     [99h],a
+        ld      a,l
+	di
+.di5:   out     [99h],a
+        ld      a,h
+        and     00111111b
+.ei5:	ei
+        out     [99h],a
 	
-RefreshScr:
-	ld	a,1
-	ld	(RefreshScrD),a
-	
-        inc     (iy+12h)
-	ld	a,0bh
-        bit     3,(iy-1)        
-        jr      z,.313          ;[0A08Fh]   ¨Hay relampago?
-        ld      a,0Fh           ;           ¨Pues pon el blanco como
-                                ;            color de fondo?
-.313:   call    PutColorF       ;[0B4A6h]
-	sub	a
-        ld      (RefreshON),a   ;[84D5h]
-	call	ControlSound		;[0B468h]
-
-
-	ld	a,4
-	call	PutColorF
-	
-        ld      a,1    
-        ld      (RefreshON),a       ;[84D5h]
-	ei
-.315:	halt
-	ld	a,(RefreshScrD)
-	or	a
-	jr	nz,.315
-	ret
-
-
-	
-		
-RefreshScrI:
-	ld	a,0Fh
-	call	PutColorF
-	ld	de,1800h
-        call    WritePTR_VRAMI           ;[0B43Fh]
-        ld      hl,(PatternMapPtr)      ;[84D3h]
-	ld	b,0
-	call	WriteLinesSc4
-	call	WriteLinesSc4
-	ld	b,64
-	call	WriteLinesSc4
-
-	call	RestoreSpriteColor
-	ld	de,1e00h
-        call    WritePTR_VRAMI           ;[0B43Fh]
-        ld      hl,SpriteAttrib
-	ld	b,50h	;Si se pone 48 en lugar de 50 se queda colgado O_O
-
-	ld	a,1
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
-
-	nop
-	nop
-.318:	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	jp	nz,.318		;[0A147h]	
-
-
-	
-	call	RestorePage	
-	ld	a,(0F3E0h)
-	ld	b,a
-	ld	a,1
-        call    WriteVDP_Reg           ;[0B4A9h]
-.label:	jp	WaitTime
-
-
-
-WriteLinesSc4:
-	ld	c,098h	
-.loop:	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi	
-	outi
-	outi
-	outi
-	outi
-	outi	
-	outi
-	outi
-	outi
-	outi
-	outi				
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
-	outi
 	inc	hl
-	inc	hl	
-	jp	nz,.loop
-	ret
+	sbc	hl,de
+	jp	z,.unbuffer
 	
-
-VecIntP:		
-        push    af
-        in      a,(99h)         
-        ld      a,(RefreshON)   ;[84D5h]
-	or	a
-	jr	z,.out
-
-	push	de
-	push	hl
-	push	bc
-
-
-	ld	a,(RefreshScrD)
-	or	a
-	jp	z,.oui
-	call	RefreshScrI	
-	call	ChangePatPer
-
-	xor	a
-	ld	(RefreshScrD),a
-.oui:	
-	call	ControlSound	;Quitar el salvar registros		
-	pop	bc
-	pop	hl
-	pop	de
-	
-.out:	pop	af
-	ei
-	ret
-
-RestorePage:
-	ld	a,(vrampage)		
-SetPage:
-	ld	(vrampage),a	
-	di	
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
-	ret	
-vrampage:	db	0
-	
-	
-	
-		
-
-
-	forg	0b801h-LdAddress
-	org	0b801h		
-	ret	; Este ret es para evitar la escritura 
-		;;; de los datos de los personajes
-	;; 
-
-
-
-	forg	8555h-LdAddress
-	org	8555h
-			
-ChangePatPJS:	equ 85edh
-ContItera:	equ 84d9h
-	
-		
-ChangePatPer:
-	
-        call    ChangePatPJS             ;[85EDh]
-
-        ld      a,(ContItera)       ;[84D9h]
-	inc	a
-	cp	6
-	jr	nz,.9		;[85ABh]
-
-        ld	a,(.PaginaV)	;[84DAh]
-        add	a,8
-	cp	18h
-	jr	nz,.1
-	xor	a		
-.1:	ld      (.PaginaV),a       ;[84DAh] otro sitio
-
-	
-	or	3	
-	di
-	out	(99h),a
-	ld	a,4+128
-	out	(99h),a
-
-	xor	a
-.9:     ld      (ContItera),a   ;[84D9h] En esta primera llamada creo que
-	ret
-		
-
-.PaginaV:	db 0
-
-
-;;; ***********************************************************************
-;;; Color de fondo de los records.
-;;; ***********************************************************************
-
-	forg 0b8c4h -LdAddress
-	org 0b8c4h
-
-	
-;Nombre: GetNamePJ
-;Objetivo: devolver el nombre y color del personaje que se le pasa como
-;          parametro.
-;Entrada: a  -> Codificacion del personaje
-;salida:  hl -> Direccion donde se almacena el nombre del personaje
-;         c -> Color del personaje
-
-
-GetNamePJ:
-        ld      hl,444Fh
-	ld	c,2Bh   	; Colores de los personajes tambien
-	or	a
-	ret	z
-
-        ld	hl,4457h	
-	ld	c,6Bh
-	sub	8
-        ret	z
-
-	ld	hl,4461h
-	ld	c,7Bh
-	sub	8
-	ret	z
-
-	ld	hl,4469h
-	ld	c,4Bh
-	ret
-
-
-
-	forg	0b5c0h-LdAddress
-	org	0b5c0h
-	ld	de,1e00h
-
-
-	
-	forg 0b373h-LdAddress
-	org 0b373h
-	
-	ld b,09bh
-
-	
-	forg 0b5b6h-LdAddress
-	org 0b5b6h	
-	ld b,09bh
-
-
-	forg 094c7h-LdAddress
-	org 094c7h
-	ld	(hl),220	; Modificacion para ocultar sprites
-
-
-	
-	forg 0b602h-LdAddress
-	org 0b602h
-
-DefSymbols:		equ 0b895h
-PutColorTextPer:	equ 0b69eh	
-PutColorLetter:		equ 0b6b0h
-		
-
-InitPJ:
-        push    de              ;Esta puede ser la funcion de inicializacion
-        exx                     ;de un personaje
-        bit     7,(ix+14h)      ;Estaba vivo antes?
-	jr	z,.562		;[0B618h]
-
-        pop     af              ;Porque sino no vuelvo a hacer esto
-        call    DefSymbols      ;[0B895h]
-
-	ld	c,5bh
-        call    PutColorTextPer ;[0B69Eh]
-	ld	c,08bh
-        jp      PutColorLetter  ;[0B6B0h]
-
-.562:
-
-	
-	forg 0b79fh-LdAddress
-	org 0b79fh
-	ld	b,0abh		; Rectificacion del color de marcador
-	
-	
-
-	forg 9de4h-LdAddress
-	org 9de4h
-		
-ChangeWalls:
-	ld	a,(ix+2);en esta posicion se guarda el tipo de muro con su color.
-	rra
-	rra
-	rra
-	and	7
-	cp	3
-	jr	c,.278		;[9DF2h]
-	sub	3
-	
-.278:	ld	de,0
-	or	a
-	jr	z,.279		;[9DFFh]
-
-	ld	e,60h		;'`'
-	dec	a
-	jr	z,.279		;[9DFFh]
-
-	ld	e,0C0h		;'À'
-.279:	ld	hl,0EE0h
-	add	hl,de
-	push	de
-	
-	push	hl
-       	push	hl
-	ld	de,2808h	;Aqui cambiamos el patron en el banco 1
-	ld	bc,60h		;de los muros
-	ldir
-	
-	pop	hl	
-	ld	de,3008h
-	ld	bc,60h
-	ldir
-	
-	pop	hl	
-	ld	de,3808h
-	ld	bc,60h
-	ldir
-	
-	ld	a,(ix+2)
-	and	38h		;Para cada muro hay 2 combinaciones distintas
-	rrca
-	rrca
-	rrca
-		
-	ld	e,a
-	ld	d,0
-	ld	hl,WallColorList
-	add	hl,de
-
-	di
-	ld	a,14
-	out	(99h),a
-	ld	a,128+16
-	out	(99h),a
-	ld	b,4
-	ld	c,9Ah
-	otir
-       	ei
-	jp ChangeWallColor
-	
-
-	res	6,a
-	ld	b,a
-	ld	a,1
-        jp      WriteVDP_Reg           ;[0B4A9h]
-	
-	
-	
-;;; Aqui hay mucho sitio para parches!!!!!!
-	
-
-WallColorList:	db 70h,5,40h,2
-		db 11h,7,00h,4
-		db 06h,5,04h,2
-		db 54h,3,32h,1
-		db 64h,4,42h,2
-		db 56h,6,34h,3
-		db 50h,4,30h,2
-		db 50h,7,02h,4
-
-	
-
-;;; BUSCAR SITIO PARA METER ESTA RUTINA
-;;; ESTA USADA -> ESTE TROZO HACE QUE SE CUELGUE SI SE PONE EN LA DIRECCION CORRECTA
-
-RELMEM:	equ 0da00h
-	
-	forg 	08000h-LdAddress
-	org	08000h 
-
-
-	di
-	ld	a,1
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
-	
-	ld	de,1c00h
-        call    WritePTR_VRAMI           ;[0B43Fh]
-	xor	a
-	ld	e,2
-.2:	ld	bc,098h
-.1:	out	(c),a
-	djnz	.1
-	dec	e
-	jr	nz,.2
-	
-	
-	xor	a
-	call	SetPage
-	ei
-	
-	ld	hl,RelocableCode
-	ld	de,RELMEM
-	ld	bc,RelocableCodeEnd-ChangeWallColor
-	ldir
-	jp	8300h
-
-
-
-;;; Inicio codigo conflictivo
-	
-RelocableCode:		
-	org	RELMEM
-ChangeWallColor: ; ESTOS VALORES SE PUEDEN PONER DIRECTAMENTE Y DEJAR ESPACIO
-	pop	de
-	ld	hl,680h
-	add	hl,de
-	ld	de,2008h	;Cambio de colores de los muros
-	ld	b,60h		;'`'
-	call	MakeColorWall		;[9E4Bh]
-	ld	hl,7A0h		;Cambio de colores de 
-	ld	de,2200h	;los muros rotos
-	ld	b,58h		;'X'
-	call	MakeColorWall
-	ret
-
-	
-	
-	
-			
-		
-MakeColorWall:
-	ld	c,0
-	ld	a,(hl)
-	and	0Fh
-	jr	z,.280		;[9E5Eh]
-	
-	cp	7
-	ld	a,c
-	jr	z,.281		;[9E5Bh]
-	
-WallSM_NL_H 
-	or	0eh 	; B9E58
-	jr	.282		;[9E5Dh]
-
-WallSM_NH_L
-.281:	or	0f0h	; B9E5C
-.282:	ld	c,a
-.280:	ld	a,(hl)
-	and	0F0h		;'ð'
-	jr	z,.283		;[9E6Fh]
-	
-	cp	70h		;'p'
-	ld	a,c
-	jr	z,.284		;[9E6Ch]
-	
-WallSM_NH_H		
-	or	0f0h	; B9E69
-	jr	.285		;[9E6Eh]
-
-WallSM_NL_L		
-.284:	or	0eh 	; B9E6D
-.285:	ld	c,a
-.283:	ld	a,c
-	ld	(de),a
-	inc	hl
-	inc	de
-	djnz	MakeColorWall		;[9E4Bh]
-	ret
-
-FillVRAMx8:	equ 0B693h
-
-	
-PutLineSP:
-	 ret
-	inc	e	
-	ld	a,7Fh
-	cp	l
-	jr	nz,.1
-	ld	hl,1D30h
-	jr	.2	
-.1:	ld	hl,1D20h
-.2:
-	push	de	
 	ex	de,hl
-	call    WritePTR_VRAMI	
-	di
-	ld	a,1
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
-	ei
-	pop	de
+	add	hl,bc
+	ex	de,hl
+
+.matchlp:
+        in      a,[98h]                 ; read byte
+        dec     bc
+        out     [9Bh],a                 ; write byte
+        ld      a,c
+        or      b
+        jp      nz,.matchlp
+        ex      af,af'
+
+        pop	hl			; get src back
+	ld	c,9Bh
+        jp      .loop
+
+.unbuffer:
+	ex	de,hl
+	add	hl,bc
+	ex	de,hl
+
+        in      a,[98h]                 ; read byte
+	ld	[.bufmatch+1],a
+.bufmatch:
+	ld	a,0
+        out     [9Bh],a                 ; write byte
+        dec     bc
+        ld      a,c
+        or      b
+        jp      nz,.bufmatch 
+        ex      af,af'
+
+        pop	hl			; get src back
+	ld	c,9Bh
+        jp      .loop
+
+.hmmc:  db     0,0,0,0
+        db     0,1,0,3
+        db     0,0,F0h
 	
-	ld	a,e
-	call	FillVRAMx8
-	call	FillVRAMx8
-	call	RestorePage
-	ret
-
-
-InitScr:	equ 0b590h
-CleanVRAM:	equ 0b5d9h
-HideSprites:	equ 094c4h	
-	
-InitScrP:			; Reubicada entera, hay espacio en la posicion
-	ld	a,3		; original
-	di
-	out	(99h),a
-	ld	a,4+128
-	out	(99h),a
-	call	DisableSCR
-	
-	ld	de,1800h
-        call    WritePTR_VRAMI           ;[0B43Fh]
-
-        sub     a                                               
-.557:   out     (98h),a         
-	inc	a
-	jr	nz,.557		;[0B59Ah]
-
-.558:   out     (98h),a         
-	inc	a
-	jr	nz,.558		;[0B59Fh]
-
-.559:   out     (98h),a         
-	inc	a
-        cp      60h             
-	jr	nz,.559		;[0B5A4h]
-
-	ld	de,0
-	ld	b,0
-        call    CleanVRAM         ;[0B5D9h]      ;Limpio la tabla de definicion
-                                                ;de patrones
-        ld      de,2000h                        ;La tabla de definicion de 
-        ld      b,09bh          ;               ;los colores
-        call    CleanVRAM        ;[0B5D9h]
-
-	ld	b,80h		;'P'
-        call    HideSprites           ;[94C4h]        
-                                                
-	ld	de,1e00h
-        call    WritePTR_VRAMI  ;[0B43Fh]
-
-	di
-	ld	a,1
-	out	(099h),a
-	ld	a,128+14
-	out	(99h),a
-	ei
-	
-        ld      hl,SpriteAttrib ;Escribo las caracteristica de 20 sprites
-        ld      b,80h           
-.560:	outi
-	jp	nz,.560		;[0B5CBh]
-	call	RestorePage
-	
-        ld      a,(0F3E0h)      ;Esto no es correcto!!!!!
-	ld	b,a
-	ld	a,1
-        jp      WriteVDP_Reg    ;[0B4A9h]
-
-
+GetBit: add     a,a
+        ret     nz
+        ld      a,[hl]          ; read new byte
+        inc     hl
+        adc     a,a             ; cf = 1, last bit shifted is always 1
+        ret
 	
 
-	
-
-
-ReadPTR_VRAM:	equ 0B454h		
-
-;;; ESTA FUNCION NO ES NECESARIA!!!!!!
-;;; LO QUE HAY QUE HACER ES CREAR UNA TABLA DE COLORES QUE EMULE
-;;; A LA PALETA DE SC2!!!!!!!!!!!!!!!!
-;;; NO. EL PROBLEMA ESTA EN QUE NO SE ACTUALIZA EL CAMPO DE COLOR
-;;; EN SPRITE ATTRIBUTE. NO SE POR QUE.
-;;; COMPROBADO EN EL ORIGINAL QUE ESE ES EL COMPORTAMIENTO NORMAL
-;;; ESCRIBE EN ALGUN MOMENTO EN MEDIO DEL CODIGO SIN TENER EN CUENTA
-;;; LA TABLA SPRITEATTRIBUTE
-	
-;;; ESTA FUNCION ESTA MAL PORQUE NO SELECCIONA LA PAGINA ANTES
-;;; DE ESCRIBIR:	 LA TABLA DE SPRITES ESTA EN PAGINA 1
-;;; ------------------------------------------------------------
-;;; YA HE CONSEGUIDO QUE SE COPIE EL COLOR DESDE LA TABLA
-;;; DE ATRIBUTOS A LA TABLA DE COLORES. AHORA EL PROBLEMA RESIDE
-;;; EN QUE LA TABLA DE ATRIBUTOS NO TIENE BIEN PUESTO EL COLOR
-	
-;;; Probando a partir de ruptura en 9298(comprobar olision de disparo)
-;;; PARECE QUE EL PROBLEMA VIENE DE QUE EN EL ORIGINAL LA ESCRITURA
-;;; DE LOS SPRITES SE HACIA FUERA DE LA INTERRUPCION. EL PROBLEMA RESIDE EN
-;;; QUE DESPUES DEL PUNTO DONDE EL ESCRIBIA, TOCA DE NUEVO LA TABLA.
-;;; EL JUEGO MODIFICA LA TABLA DE ATRIBUTOS DESPUES DE LA FUNCION 
-;;;   9093,9327,905b
-;;; EL JUEGO ESCRIBE EN LA TABLA DE ATRIBUTOS RAM ENTRE LAS FUNCIONES:
-;;; 1. ProcessPJ y DecLifePJ
-;;; 2. Entre las posiciones 9327 y 905b => Sucede en las dos versiones
-;;; En affe sigue el valor escrito en RAM
-;;; SOLUCIONADO!!!!!
-;;; AHORA TAN SOLO FALTAN LOS SPRITES DE LOS PERSONAJES JUGADORES.
-	
+gchars:			
+	incbin	"select.tcf",8
 			
-RestoreSpriteColor:	
-	di
-	ld	a,1 
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
 
-	ld	b,29
-	ld	hl,SpriteAttrib
-	ld	de,01c00h
-	call	WritePTR_VRAMI
-
-.2:	ld	de,SpriteColorLT
-	inc	hl
-	inc	hl
-	inc	hl
-	ld	a,(hl)
-	and	0Fh
-
-	push	hl
-	ld	h,0
-	ld	l,a
-	add	hl,de
-	ld	a,(hl)
-
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a			
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a			
-	out (98h),a
-	pop	hl
-	inc	hl
-	djnz	.2
-	call	RestorePage
-	ret
 	
+hand:	 db 060h,078h,05eh,03fh,017h,00fh,005h,002h
+	 db 005h,00bh,00bh,007h,006h,008h,00eh,00fh
+	 db 000h,000h,000h,080h,0e0h,0f8h,01eh,0e7h
+	 db 0ffh,0ffh,05fh,03fh,03fh,01fh,09eh,00eh
+	 db 000h,000h,000h,000h,000h,000h,000h,080h
+	 db 0e0h,0f8h,0feh,0bfh,07fh,07fh,0feh,0fch
+	 db 000h,000h,000h,000h,000h,000h,000h,000h
+	 db 000h,000h,000h,080h,0e0h,018h,004h,004h
+	 db 002h,00ch,00eh,007h,001h,000h,000h,000h
+	 db 000h,000h,000h,000h,000h,000h,000h,000h
+	 db 011h,05eh,09eh,01eh,00fh,000h,000h,000h
+	 db 000h,000h,000h,000h,000h,000h,000h,000h
 
-SpriteColorLT:	db 2
-		db 11
-		db 4
-		db 4
-		db 6
-		db 12
-		db 10
-		db 13
+	 db 0fch,0f8h,0f8h,0f8h,078h,038h,018h,008h
+	 db 00ch,005h,006h,003h,001h,000h,000h,000h
+	 db 00ah,006h,00ah,016h,02ah,016h,02ah,056h
+	 db 0ach,054h,0a8h,050h,0e0h,000h,000h,000h
 	
-		db 2
-		db 1
-		db 8
-		db 7
-		db 4
-		db 1
-		db 3
-		db 9
-	
-		
-	
-	
-RelocableCodeEnd: db 0	
-	
-;;; Fin de codigo conflictivo
+	 db 078h,0feh,0ffh,07fh,03fh,01fh,00fh,007h
+	 db 00fh,01fh,01fh,01fh,01fh,01fh,01fh,01fh
+	 db 000h,000h,080h,0e0h,0f8h,0feh,0ffh,0ffh
+	 db 0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+	 db 000h,000h,000h,000h,000h,000h,080h,0e0h
+	 db 0f8h,0feh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+	 db 000h,000h,000h,000h,000h,000h,000h,000h
+	 db 000h,000h,080h,0e0h,0f8h,0fch,0feh,0ffh
+	 db 01fh,01fh,01fh,00fh,007h,001h,000h,000h
+	 db 000h,000h,000h,000h,000h,000h,000h,000h
+	 db 0ffh,0ffh,0ffh,0ffh,0dfh,08fh,000h,000h
+	 db 000h,000h,000h,000h,000h,000h,000h,000h
+	 db 0ffh,0ffh,0ffh,0ffh,0ffh,07fh,03fh,01fh
+	 db 01fh,00fh,00fh,007h,003h,001h,000h,000h
+ 	 db 0feh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+	 db 0feh,0feh,0fch,0f8h,0f0h,0e0h,000h,000h
 
-	forg	InitScr-LdAddress
-	org	InitScr
-	jp	InitScrP
-		
-		
-	forg 9AD4h-LdAddress
-	org 9AD4h
-	
-	
-GetPatSpPj:
-        ld      e,8             ;-A¨Es el Guerrero?-b
-	sub	8
-	jr	c,.242		;[9AE8h]
-
-        ld      e,4             ;-A¨Es la walkyria?-b
-	sub	8
-	jr	c,.242		;[9AE8h]
-
-        ld      e,0Ah           ;-A¨Es el mago?-b
-	sub	8
-	jr	c,.242		;[9AE8h]
-
-        ld      e,2             ;-A¨Es el elfo?-b
-.242:	ld	a,b
-	cp	2
-	jr	nc,.243		;[9AF4h]
-
-	bit	4,(iy+18h)
-	jr	z,.243		;[9AF4h]
-.243:	jp	PutLineSP
-	
-	
-	
-		
-	forg 0b45bh-LdAddress
-	org 0b45bh
-
-;Nombre: VectorInt
-;Objetivo: Sirve como vector de interrupcion al programa
-
-VectorInt:
-	jp	VecIntP
-RefreshScrD:	db 0
+end:	db 0
 	
