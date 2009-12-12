@@ -38,11 +38,15 @@ RowKeyb:	equ     847Fh
 	dw	8000h
 
 
-	forg	8400h-LdAddress
-	org	8400h
-	jp	0b90fh		;evito inicio
+;;; forg	8400h-LdAddress
+;;; org	8400h
+;	jp	0b90fh		;evito inicio
 	
 
+        forg    83d0h-LdAddress
+        org     83d0h   
+        jp      0b90fh           ; evito rutina de slot	
+	
 	forg	0b38ah-LdAddress
 	ret			;avoid tape message 
 	
@@ -739,8 +743,6 @@ WallColorList:	db 70h,5,40h,2
 
 	
 
-;;; BUSCAR SITIO PARA METER ESTA RUTINA
-;;; ESTA USADA -> ESTE TROZO HACE QUE SE CUELGUE SI SE PONE EN LA DIRECCION CORRECTA
 
 RELMEM:	equ 0f41fh
 	
@@ -771,7 +773,7 @@ RELMEM:	equ 0f41fh
 	dec	e
 	jr	nz,.2
 	
-	
+	call	PutSlotRam
 	xor	a
 	call	SetPage
 	ei
@@ -913,9 +915,13 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
 	inc	a
 	jr	nz,.558		;[0B59Fh]
 
-.559:   out     (98h),a         
+	
+.559:   ld	e,a
+	xor	a
+	out     (98h),a
+	ld	a,e
 	inc	a
-        cp      60h             
+;;;	cp      60h
 	jr	nz,.559		;[0B5A4h]
 
 	ld	de,0
@@ -1033,7 +1039,7 @@ PutPatternPage:
 	ret
 			
 	
-;;; ESTA RUTINA ESTA FALLANDO!!!!!! URGENTE!!!!!
+
 
 Spritecolorcache:	equ	0f806h
 					
@@ -1072,7 +1078,7 @@ RestoreSpriteColor:
 	or	20h
 
 		
-.write:	out	(2fh),a
+.write:	
 	ld	c,b
 	ld	b,16
 .loop:	out	(98h),a
@@ -1093,7 +1099,27 @@ RestoreSpriteColor:
 
 .ptr:	dw	0
 
+
 	
+	
+SpriteColorLT:	db 2		
+		db 11		
+		db 4
+		db 4
+		db 6
+		db 12
+		db 10
+		db 13
+	
+		db 2
+		db 1
+		db 8
+		db 7
+		db 4
+		db 1
+		db 3
+		db 9
+		
 
 ;;; Move character 1 to 20 position
 ;;; Wrote pattern 2nd sprite player 1 at 6 pattern position
@@ -1120,8 +1146,7 @@ Put2Sprites:
 	call	SndSprPat	; Put Pattern of 2nd spr
 	
 	ld	hl,SpriteAttrib+19*4	
-	ld	de,1c00h+21*16	; spritecolor	
-	ld	bc,1e00h+21*4	; spriteatt => y el sprite 20 (2º personaje)
+	ld	de,1e00h+21*4	; spriteatt => y el sprite 20 (2º personaje)
 	ld	a,6*4		; Number of pattern and color 
 	call	SndSprAtt
 	jr	.2p
@@ -1151,8 +1176,7 @@ Put2Sprites:
 	call	SndSprPat	; Put Pattern of 2nd spr
 	
 	ld	hl,SpriteAttrib+18*4	
-	ld	de,1c00h+19*16	; spritecolor	
-	ld	bc,1e00h+19*4	; spriteatt => y el sprite 19 (2º personaje)
+	ld	de,1e00h+19*4	; spriteatt => y el sprite 19 (2º personaje)
 	ld	a,5*4		; Number of pattern and color 
 	call	SndSprAtt		
 	jr	.end
@@ -1256,45 +1280,25 @@ color:		db 0
 ;;; (attcolor) -> color
 
 
+;;; hl -> Atributo
+;;; de -> VRAM attribute address
+;;; a  -> Numero de patron
+
+
+
 SndSprAtt:
         push    af
-        push    hl
-        push    bc
-        call    SetPtrVram      ; Put colour address
-
-.t:     pop     de      ; Recovery attribute adress
         call    SetPtrVram
-        pop     hl
         ld      bc,298h
         otir
         pop     af
         out     (98h),a
         ret
 
-attcolor:	db 0
 
-
-
-
+	
 	
 		
-SpriteColorLT:	db 2		
-		db 11		
-		db 4
-		db 4
-		db 6
-		db 12
-		db 10
-		db 13
-	
-		db 2
-		db 1
-		db 8
-		db 7
-		db 4
-		db 1
-		db 3
-		db 9
 	
 		
 		
