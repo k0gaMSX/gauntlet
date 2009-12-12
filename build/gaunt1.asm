@@ -1,6 +1,5 @@
-%include "tniasm.inc"
 %include "z80r800.inc"
-%include "z80().inc"
+%include "z80__.inc"
 
 CALSLT  equ     001Ch
 CHGMOD  equ     005Fh
@@ -32,9 +31,7 @@ TIMEFADE equ	3
 	dw	Init
 
 	
-Init:	ld	a,1fh
-	out	(2eh),a
-	ld	a,14h
+Init:	ld	a,14h
 	call	InitVDP
 	
 	call	ColourSFX
@@ -56,37 +53,33 @@ PALETAW1:	DS	32,0
 	
   	
 SelectChars:
-	ld	hl,copyscr	; First copy screen to page 1
+	ld	hl,copyscr		
 	CALL	WAIT_COM
 	CALL	COPYVRAM
 	ld	hl,buildp2
-	CALL	WAIT_COM	; And generate player 2 gfx
+	CALL	WAIT_COM
 	CALL	COPYVRAM
 	
 	ld	a,3
 	call	VER_PAGE
-	call	BuildHand	; Load in vram hand sprite
+	call	BuildHand
 	LD	HL,SelectPallette
 	call	FADE_ON
-	call	getNumbers	; Select number of players
-	call	selectP1	; Select player 1
-	ld	(0fffdh),a
+	call	getNumbers	
+	call	selectP1
 	ld	a,(nplayers)
 	dec	a
-	call	nz,selectP2	; and player 2 if it is necessary
+	call	nz,selectP2
 	ret
 	
 
-
-	
 selectP2:
 	ld	a,1
 	ld	(copyline+3),a	
 	call	selectP1
 	ld	(0fffe),a
 	ret
-
-		
+	
 			
 selectP1:
 	call	SPD_OFF
@@ -113,7 +106,7 @@ selectP1:
 	or	a
 	jr	z,.loop
 	dec	a
-	out	(2fh),a
+	ld	(0fffdh),a
 	ret
 
 		
@@ -229,9 +222,9 @@ searchButton:
 Pos:	db	143,90,167,99,6
 	db	88,90,113,99,5
 	db	1,1,127,107,1
-	db	128,1,254,107,4
-	db	1,108,129,208,2
-	db	128,129,254,208,3
+	db	128,1,254,107,2
+	db	1,108,129,208,3
+	db	128,129,254,208,4
 	db	0
 
 	
@@ -1183,16 +1176,17 @@ Pallette:
 	db 11h,1, 73h,4, 70h,0, 44h,4, 00h,5, 50h,3, 27h,2, 70h,6
 	db 70h,4, 77h,7, 40h,1, 00h,0, 37h,5, 57h,0, 65h,0, 76h,4
 
-ColorChange:	db	0
-	
+ColorChange:	db	0	
 TitlePallette:
 	db  00h,0, 00h,6, 02h,0, 40h,2, 14h,0, 27h,0, 50h,0, 37h,4
 	db  70h,0, 73h,4, 70h,6, 74h,7, 03h,4, 62h,3, 50h,2, 77h,7
 		
 SelectPallette:
-	dw 0000h,0333h,0630h,0574h,0026h,0237h,0040h,0547h
-	dw 0060h,0463h,0570h,0774h,0420h,0251h,0555h,0777h
+	db  11h,1, 00h,0, 00h,6, 44h,7, 07h,2, 37h,4, 50h,0, 47h,6  
+	db  70h,0, 73h,4, 70h,6, 74h,7, 00h,4, 62h,3, 55h,5, 77h,7  
 
+	
+	
 		
 VER_PAGE:
 	DI	
@@ -1238,7 +1232,6 @@ SETVDP_LI:
 	OUT	(99h),A
 	LD	A,128+0
 	OUT	(99h),A
-	EI
 	RET
 
 

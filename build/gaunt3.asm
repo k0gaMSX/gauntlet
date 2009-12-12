@@ -1,6 +1,5 @@
-%include "tniasm.inc"
 %include "z80r800.inc"
-%include "z80().inc"
+%include "z80__.inc"
 
 MainLoop:	equ	0b258h
 SetPtrVram:	equ	0b444h
@@ -655,6 +654,7 @@ WallColorList:	db 70h,5,40h,2
 ;;; ESTA USADA -> ESTE TROZO HACE QUE SE CUELGUE SI SE PONE EN LA DIRECCION CORRECTA
 
 RELMEM:	equ 0da00h
+	
 	forg 	08000h-LdAddress
 	org	08000h 
 

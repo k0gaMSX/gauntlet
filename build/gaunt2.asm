@@ -1,6 +1,5 @@
-%include "tniasm.inc"
 %include "z80r800.inc"
-%include "z80().inc"
+%include "z80__.inc"
 
 
 LdAddress:	equ	87d0h-7
