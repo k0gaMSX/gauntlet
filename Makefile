@@ -2,16 +2,11 @@
 
 
 
-test:	gaunt.dsk
-	openmsx gaunt.dsk -machine msx2 -ext debugdevice
+#test:	gaunt.dsk
+#	openmsx gaunt.dsk -machine msx2 -ext debugdevice
 
 
-gaunt.dsk: gaunt.3 gaunt.2 gaunt.1 gauntlet
-	rm -f gaunt.dsk
-	cp gauntlet.dsk gaunt.dsk
-	wrdsk gaunt.dsk gaunt.3
-	wrdsk gaunt.dsk gaunt.2
-	wrdsk gaunt.dsk gaunt.1
+gauntlet.rom:	gaunt1.asm page2.bin page3.bin deps 
 
 
 gaunt.3: gaunt3.asm deps

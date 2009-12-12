@@ -1,19 +1,10 @@
-%include "tniasm.inc"
-%include "z80r800.inc"
-%include "z80().inc"
+;;; %include "tniasm.inc"
+;;; %include "z80r800.inc"
+;;; %include "z80().inc"
 
-CALSLT  equ     001Ch
-CHGMOD  equ     005Fh
-SUBSLT  equ     0FAF8h
-EXBRSA  equ     0FCC1h
-RG0SAV	equ	0F3DFh
-RG1SAV	equ	0F3E0h
-RG8SAV	equ	0FFE7h
-LINEINT equ	140
-CHGET	equ	009FH
-SNSMAT	equ	0141H	
-WRTPSG	equ	093H
-RDPSG	equ	096H
+
+	
+LINEINT equ	140	
 TIMEFADE equ	3
 
 
@@ -24,23 +15,17 @@ TIMEFADE equ	3
 	
 	
 		
+section	code		
 	
-	org	8400h 
-	db	0feh
-	dw	Init
-	dw	End
-	dw	Init
-
-	
-Init:	ld	a,1fh
+ShowIntro:	
+	ld	a,1fh
 	out	(2eh),a
 
 	ld	hl,datab
 	ld	de,databss
 	ld	bc,datae-datab
 	ldir
-	
-	
+			
 	ld	a,14h
 	call	InitVDP
 	
@@ -58,6 +43,11 @@ PAL_NEGRO:	DS	32,0
 	
   	
 SelectChars:
+	ld	hl,gchars
+	ld	de,8000h
+	scf
+	call	UnTCFV
+	
 	ld	hl,copyscr	; First copy screen to page 1
 	CALL	WAIT_COM
 	CALL	COPYVRAM
@@ -76,6 +66,7 @@ SelectChars:
 	ld	a,(nplayers)
 	dec	a
 	call	nz,selectP2	; and player 2 if it is necessary
+	ld	(0fffeh),a	
 	ret
 	
 
@@ -335,6 +326,7 @@ MoveHand:
 	ld	a,b	
 	jr	z,.derecha
 	dec	(hl)
+	dec	(hl)	
 	
 .derecha:	
 	bit	3,a
@@ -344,7 +336,8 @@ MoveHand:
 	cp	224
 	ld	a,b
 	jr	z,.abajo
-	inc	(hl)	
+	inc	(hl)
+	inc	(hl)		
 
 .abajo:	ld	hl,OffsetY
 	bit	1,a
@@ -355,6 +348,7 @@ MoveHand:
 	ld	a,b	
 	jr	z,.arriba
 	inc	(hl)
+	inc	(hl)	
 
 .arriba:		
 	bit	0,a
@@ -363,6 +357,7 @@ MoveHand:
 	or	a
 	ret	z
 	dec	(hl)
+	dec	(hl)	
 	ret
 
 
@@ -934,15 +929,11 @@ ColourSFX:
 	ld	de,0
 	scf
 	call	UnTCFV
-	ld	hl,gchars
-	ld	de,8000h
-	scf
-	call	UnTCFV
 
-	
 	ld	a,2
 	call	VER_PAGE
 	ld	hl,PAL_NEGRO
+	ld	hl,TitlePallette	
 	call	PutPal
 	call	VIS_ON
 	
@@ -954,7 +945,9 @@ ColourSFX:
 	call	waitnKB
 	CALL	RESVDP_LI
 	LD	HL,TitlePallette
-	call	FADE_OFF	
+	call	FADE_OFF
+	
+	
 	ret
 	
 
@@ -1301,9 +1294,10 @@ SetVram:
 	
 		
 InitScr:	
-	ld	iy,(EXBRSA-1)
-	ld	ix,CHGMOD
-	call	CALSLT
+;;; ld	iy,(EXBRSA-1)
+;;; ld	ix,CHGMOD
+;;; call	CALSLT
+	call	05fh
 	ret
 
 
@@ -1392,29 +1386,19 @@ LEE_JOY:
 
 UnTCFV::ld      ix,-1           ; last_m_off
 
-	ld	a,i		; get interrupts enable state
-	ld	a,0
-        jp      po,.imod
-	ld	a,FBh
-.imod:	ld	[.ei1],a
-	ld	[.ei2],a
-	ld	[.ei3],a
-	ld	[.ei4],a
-	ld	[.ei5],a
-
 	ld	a,d
         rla
         rla
         and	00000011b
-        ld	[.hmmc+3],a
+        ld	[hmmc+3],a
         and     00000010b
-        ld      [.hmod],a
+        ld      iyl,a
 
 	ld	a,e
 	add	a,a
 	ld	a,d
 	adc	a,a
-	ld	[.hmmc+2],a
+	ld	[hmmc+2],a
 
         ld      a,[hl]          ; read first byte
         inc     hl
@@ -1425,17 +1409,17 @@ UnTCFV::ld      ix,-1           ; last_m_off
 	ex	af,af'
 	ld	a,[hl]
 	inc	hl
-        ld	[.hmmc+8],a
+        ld	[hmmc+8],a
 	inc	de
 
         ld      a,36                    ; start HMMC
 .di1:	di
         out     [99h],a
         ld      a,17+128
-.ei1:	ei
+	ei
         out     [99h],a
 	push	hl
-        ld      hl,.hmmc
+        ld      hl,hmmc
         ld      bc,0B9Bh
         otir
         pop	hl
@@ -1443,7 +1427,7 @@ UnTCFV::ld      ix,-1           ; last_m_off
 .di2:	di
 	out     [99h],a
         ld      a,17+128
-.ei2:	ei
+	ei
         out     [99h],a
         ex	af,af'
 	jp	.loop
@@ -1472,7 +1456,7 @@ UnTCFV::ld      ix,-1           ; last_m_off
 .di3:	di
 	out	[99h],a
 	ld	a,46+128
-.ei3:	ei
+	ei
 	out	[99h],a
 
         pop     de              ; end of compression
@@ -1539,20 +1523,19 @@ UnTCFV::ld      ix,-1           ; last_m_off
         ld      a,h
         and     11000000b
         rlca
-.hmod:	equ     $+1
-        or      0
+	or	iyl
         rlca
 .di4:	di
         out     [99h],a
         ld      a,14+128
-.ei4:	ei
+	ei
         out     [99h],a
         ld      a,l
 	di
 .di5:   out     [99h],a
         ld      a,h
         and     00111111b
-.ei5:	ei
+	ei
         out     [99h],a
 	
 	inc	hl
@@ -1582,9 +1565,9 @@ UnTCFV::ld      ix,-1           ; last_m_off
 	ex	de,hl
 
         in      a,[98h]                 ; read byte
-	ld	[.bufmatch+1],a
+	ld	iyh,a
 .bufmatch:
-	ld	a,0
+	ld	a,iyh
         out     [9Bh],a                 ; write byte
         dec     bc
         ld      a,c
@@ -1596,9 +1579,6 @@ UnTCFV::ld      ix,-1           ; last_m_off
 	ld	c,9Bh
         jp      .loop
 
-.hmmc:  db     0,0,0,0
-        db     0,1,0,3
-        db     0,0,F0h
 	
 GetBit: add     a,a
         ret     nz
@@ -1647,23 +1627,14 @@ hand:	 db 060h,078h,05eh,03fh,017h,00fh,005h,002h
 	 db 0feh,0feh,0fch,0f8h,0f0h,0e0h,000h,000h
 
 
-gchars:			
-	incbin	"select.tcf",8
-gtitle:		
-	incbin  "gtitle.tcf",8
-
-	
-
-
-
-
-
-
-
-
-	
 datab:	equ	$	
 
+
+hmmc_sh:  db     0,0,0,0
+        db     0,1,0,3
+        db     0,0,F0h
+
+	
 COOR_XY_sh: 
 	 db YINICIAL,XINICIAL
 	 db 0,0
@@ -1710,8 +1681,12 @@ datae:		equ $
 end:		equ	$
 
 
+
+section	rdata
+
+	
 databss:	equ	$
-				
+hmmc:		rb	11
 COOR_XY:	rw	16	
 rcopy1p:	rb	15
 rcopy2p:	rb	15
@@ -1730,11 +1705,8 @@ OffsetX:	rb	1
 OffsetY:	rb	1	
 
 	
-	
-	
-
-	
-
+bufmatch_v:	rb	1	
+hmod:		rb	1
 aux:		rb	1	
 oldvector:	rb	5			
 JOYPORT1:	rb	1
