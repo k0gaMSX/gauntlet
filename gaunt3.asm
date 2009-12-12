@@ -28,10 +28,6 @@ RowKeyb:	equ     847Fh
 
 ;;; Hay que trasladar los cambios de patrones
 ;;; a todas las paginas (pociones, jamon y todo eso
-;;; LA FUNCION QUE SE ENCARGA DE ACTUALIZAR POSICION SPRITE PERSONAJE
-;;; DoViewPJs
-
-
 	
 	
 	fname	"gaunt.bin",0
@@ -393,10 +389,12 @@ WriteLinesSc4:
 
 VecIntP:		
         push    af
-        in      a,(99h)         
+        in      a,(99h)
+	add	a,a
+	jp	nc,.hint
         ld      a,(RefreshON)   ;[84D5h]
 	or	a
-	jr	z,.out
+	jp	z,.out
 
 	push	de
 	push	hl
@@ -433,6 +431,23 @@ VecIntP:
 	ei
 	ret
 
+.hint:	ld	a,1
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+	in	a,(99h)
+
+;;; HERE THE SCREEN SPLIT
+	
+	xor	a
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+	pop	af
+	ei
+	ret
+	
+		
 
 	
 RestorePage:
@@ -488,20 +503,19 @@ ENASLT_0:
 	out	(a8h),a
 	ret
 
-.l:	equ $	
-;;; Ahora ueda libre menos
-
 
 	forg	0b801h-LdAddress
-	org	0b801h		
-		
+	org	0b801h				
 	ret	; Este ret es para evitar la escritura
 		;;; de los datos de los personajes
-	;; 
+	
+		;;; La funcion que escribe en el marcador es
+                ;;; InitPJ
+	
+
 
 
 	
-
 	forg	085edh-LdAddress
 	org	085edh
 	
@@ -515,9 +529,7 @@ ChangePatPJS:
 ChangePatPJ_1:	equ $
 
 	forg	8555h-LdAddress
-	org	8555h
-			
-;;; ChangePatPJS:	equ 85edh
+	org	8555h			
 ContItera:	equ 84d9h
 	
 		
@@ -597,8 +609,7 @@ GetNamePJ:
 
 	
 	forg 0b373h-LdAddress
-	org 0b373h
-	
+	org 0b373h	
 	ld b,09bh
 
 	
@@ -689,8 +700,7 @@ ChangeWalls:
 	ld	a,(ix+2)
 	and	38h		;Para cada muro hay 2 combinaciones distintas
 	rrca
-	rrca
-	rrca
+
 		
 	ld	e,a
 	ld	d,0
@@ -703,16 +713,11 @@ ChangeWalls:
 	ld	a,128+16
 	out	(99h),a
 	ld	b,4
-	ld	c,9Ah
+.1:	ld	c,9Ah
 	otir
        	ei
-	jp ChangeWallColor
+	jp	ChangeWallColor
 	
-
-	res	6,a
-	ld	b,a
-	ld	a,1
-        jp      WriteVDP_Reg           ;[0B4A9h]
 	
 	
 
@@ -782,7 +787,23 @@ sc4:
 	ld	(Rg1Sav),a
 	out	(c),a
 	ld	a,128+1
-	out	(c),a	
+	out	(c),a
+
+        ld	a,0C3h		
+	ld	(0fd9ah),a
+        ld      hl,VectorInt    
+	ld	(0fd9bh),hl
+	
+	ld	a,160		; Put interrupt line in 160 line
+        out     (c),a
+        ld      a,128+19
+        out     (c),a
+
+	ld      a,(Rg0Sav)	; Enable interrupt line vertical
+        set     4,a
+        out     (c),a
+        ld      a,128+0
+        out     (c),a	
 	ret
 	
 
@@ -792,58 +813,60 @@ sc4:
 	
 RelocableCode:		
 	org	RELMEM
-ChangeWallColor: ; ESTOS VALORES SE PUEDEN PONER DIRECTAMENTE Y DEJAR ESPACIO
+ChangeWallColor: 
 	pop	de
 	ld	hl,680h
 	add	hl,de
 	ld	de,2008h	;Cambio de colores de los muros
-	ld	b,60h		;'`'
+	ld	b,60h		
 	call	MakeColorWall		;[9E4Bh]
 	ld	hl,7A0h		;Cambio de colores de 
 	ld	de,2200h	;los muros rotos
-	ld	b,58h		;'X'
+	ld	b,58h		
 	call	MakeColorWall
 	ret
 	
 			
 		
 MakeColorWall:
-	ld	c,0
-	ld	a,(hl)
-	and	0Fh
-	jr	z,.280		;[9E5Eh]
+	ld	c,0		; Default colors are black
+	ld	a,(hl)		; Load the colour wall byte
+	and	0Fh		; and get the lower nibble
+	jr	z,.280		; if colour is 0, then load 1st color (0)
+
 	
-	cp	7
-	ld	a,c
-	jr	z,.281		;[9E5Bh]
+	cp	7		; If color is 4 then load the 2nd color (15)
+	ld	a,c		; 
+	jr	z,.281		; 
 	
-WallSM_NL_H 
-	or	0eh 	; B9E58
-	jr	.282		;[9E5Dh]
+WallSM_NL_H
+	or	0eh		
+	jr	.282	
 
 WallSM_NH_L
-.281:	or	0f0h	; B9E5C
+.281:	or	0fh	
 .282:	ld	c,a
-.280:	ld	a,(hl)
-	and	0F0h		;'ð'
-	jr	z,.283		;[9E6Fh]
+
 	
-	cp	70h		;'p'
+.280:	ld	a,(hl)
+	and	0F0h	
+	jr	z,.283
+	cp	70h	
 	ld	a,c
-	jr	z,.284		;[9E6Ch]
+	jr	z,.284	
 	
 WallSM_NH_H		
-	or	0f0h	; B9E69
-	jr	.285		;[9E6Eh]
+	or	0f0h	
+	jr	.285	
 
 WallSM_NL_L		
-.284:	or	0eh 	; B9E6D
+.284:	or	0e0h 	
 .285:	ld	c,a
 .283:	ld	a,c
 	ld	(de),a
 	inc	hl
 	inc	de
-	djnz	MakeColorWall		;[9E4Bh]
+	djnz	MakeColorWall		
 	ret
 
 FillVRAMx8:	equ 0B693h
@@ -1054,7 +1077,7 @@ RestoreSpriteColor:
 	
 Put2Sprites:
 	call	PutBios
-
+	
 	ld	a,(842bh)
 	bit	7,a
 	jr	nz,.no1p	
@@ -1072,8 +1095,6 @@ Put2Sprites:
 	ld	hl,SpriteAttrib+19*4	
 	ld	de,1c00h+21*16	; spritecolor	
 	ld	bc,1e00h+21*4	; spriteatt => y el sprite 20 (2º personaje)
-	ld	a,1
-	ld	(attcolor),a
 	ld	a,6*4		; Number of pattern and color 
 	call	SndSprAtt
 	jr	.2p
@@ -1081,15 +1102,15 @@ Put2Sprites:
 .no1p:				
 	ld	de,1e00h+20*4	; Esto hay que hacerlo si no se pone
 	call    SetPtrVram	; player 2
-	ld	bc,0498h
-	ld	a,255
+	ld	bc,0298h
+	ld	a,230
 .11:	out	(c),a
 	djnz	.11	
 	
 	ld	de,1e00h+21*4	; Esto hay que hacerlo si no se pone
 	call    SetPtrVram	; player 2
-	ld	bc,0498h
-	ld	a,255
+	ld	bc,0298h
+	ld	a,230
 .12:	out	(c),a
 	djnz	.12			
 		
@@ -1105,8 +1126,6 @@ Put2Sprites:
 	ld	hl,SpriteAttrib+18*4	
 	ld	de,1c00h+19*16	; spritecolor	
 	ld	bc,1e00h+19*4	; spriteatt => y el sprite 19 (2º personaje)
-	ld	a,1
-	ld	(attcolor),a
 	ld	a,5*4		; Number of pattern and color 
 	call	SndSprAtt		
 	jr	.end
@@ -1114,15 +1133,15 @@ Put2Sprites:
 .no2p:
 	ld	de,1e00h+19*4	; Esto hay que hacerlo si no se pone
 	call    SetPtrVram	; player 2
-	ld	bc,0498h
-	ld	a,255
+	ld	bc,0298h
+	ld	a,230
 .21:	out	(c),a
 	djnz	.21
 	
 	ld	de,1e00h+18*4	; Esto hay que hacerlo si no se pone
 	call    SetPtrVram	; player 2
-	ld	bc,0498h
-	ld	a,255
+	ld	bc,0298h
+	ld	a,230
 .22:	out	(c),a
 	djnz	.22	
 	
@@ -1214,12 +1233,6 @@ SndSprAtt:
         push    hl
         push    bc
         call    SetPtrVram      ; Put colour address
-
-;;; ld      a,(attcolor)
-;;; or      60h
-;;; ld      bc,1098h
-;.spplc: out     (c),a           ; Colour of character -> can be avoided
-;	djnz    .spplc		; using RestoreSpriteColor
 
 .t:     pop     de      ; Recovery attribute adress
         call    SetPtrVram
