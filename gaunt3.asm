@@ -41,8 +41,7 @@ RowKeyb:	equ     847Fh
 	dw	0ca20h
 	dw	8000h
 
-	
-	
+
 	forg	8400h-LdAddress
 	org	8400h
 	jp	0b90fh		;evito inicio
@@ -103,7 +102,6 @@ Sc2toSc4:
 	jp	MainLoop
 
 
-label:	nop
 
 
 	forg 0ba8dh-LdAddress
@@ -133,15 +131,6 @@ PutPal:
 	ret
 
 
-PutColor0:
-	ret
-	ld	a,(Rg8sav)
-	res	5,A
-	ld	(Rg8sav),a
-	ld	c,99h
-	out	(c),A
-	ld	A,128+8
-	out	(c),A
 
 DisableSCR:	equ	0b5E9h
 PatternGenPers:	equ	2800h
@@ -173,7 +162,7 @@ InitPatScr:
         call    WritePortRW_8           ;[0B585h]
 	pop	bc
 	djnz	.1
-
+		
 	ld	hl,(.pointer)
 	ld	a,8
 	add	a,h
@@ -216,6 +205,8 @@ InitPatScr:
 	ret
 	
 .pointer:	dw	0
+
+	;; AQUI HAY ALGO DE SITIO LIBRE
 	
 
 	forg 8545h-LdAddress
@@ -272,6 +263,8 @@ InitPatScr:
         ret
 
 
+
+	
 
 ;;; *********************************************************************
 ;;;
@@ -702,7 +695,6 @@ RELMEM:	equ 0f41fh
 	org	08000h 
 
 	call	7eh
-	call	PutColor0
 	di
 	ld	a,1
 	out	(99h),a
@@ -711,7 +703,7 @@ RELMEM:	equ 0f41fh
 	
 	ld	de,1c00h
         call    WritePTR_VRAMI           ;[0B43Fh]
-	xor	a
+	ld	a,9
 	ld	e,2
 .2:	ld	bc,098h
 .1:	out	(c),a
@@ -962,9 +954,9 @@ ReadPTR_VRAM:	equ 0B454h
 DATAPERS1:	equ 8420h
 DATAPERS2:	equ 8440h
 warspr:		equ 6000h
-valspr:		equ 6301h
-wizspr:		equ 6602h
-elfspr:		equ 6903h					
+valspr:		equ 6300h
+wizspr:		equ 6600h
+elfspr:		equ 6900h					
 PutSlotRam:	equ 95CDh	
 
 	
@@ -986,9 +978,9 @@ PutPatternPage:
 			
 				
 RestoreSpriteColor:
-	ld	b,29
-	ld	hl,SpriteAttrib
-	ld	de,01c00h
+	ld	b,21
+	ld	hl,SpriteAttrib+8*4
+	ld	de,01c00h+8*16
 	call	SetPtrVram	
 
 
@@ -1033,15 +1025,22 @@ RestoreSpriteColor:
 	
 Put2Sprites:
 	call	PutBios
+
+;;; Move character 1 to 20 position
+;;; Wrote pattern 2nd sprite player 1 at 6 pattern position
+;;; Write player 1 2nd sprite at 21
+;;; Wrote pattern 2nd sprite player 1 at 5 pattern position	
+;;; Write player 2 2nd sprite at 19
+
 	
 	ld	de,DATAPERS1	; Character data
-	ld	bc,3800h+32*30	; Cogo el patron 30
+	ld	bc,3800h+32*6	; Cogo el patron 30
 	call	SndSprPat	; Put Pattern of 2nd spr
 	
 	ld	hl,SpriteAttrib+19*4	
 	ld	de,1c00h+20*16	; spritecolor	
 	ld	bc,1e00h+20*4	; spriteatt => y el sprite 19 (2º personaje)
-	ld	a,31*4		; Number of pattern
+	ld	a,6*4		; Number of pattern
 	call	SndSprAtt
 	call	PutSlotRam	
 	ret
@@ -1057,7 +1056,6 @@ Put2Sprites:
 ;;; HAY UN ERROR EN EL PARCHEO
 	
 SndSprPat:
-	ret
 	push	ix
 	ld	ixl,e
 	ld	ixh,d
@@ -1151,8 +1149,8 @@ SndSprAtt:
 
 	
 		
-SpriteColorLT:	db 2		; AQUI HAY QUE MODIFICAR
-		db 11		; LOS COLORES DE LOS PLAYERS!!!!!
+SpriteColorLT:	db 2		
+		db 11		
 		db 4
 		db 4
 		db 6
@@ -1169,8 +1167,6 @@ SpriteColorLT:	db 2		; AQUI HAY QUE MODIFICAR
 		db 3
 		db 9
 	
-		
-;               +0dh    -> Guarda la animacion actual del personaje
 		
 		
 	

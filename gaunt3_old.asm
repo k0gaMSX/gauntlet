@@ -12,8 +12,36 @@
 ;       - Substituir todas las ocurrencias de X por Y.
 ;;; 
 ;;; Patrones de sprites:
-;;; 0 -> personaje 0
-;;; 1 -> personaje 1
+;;; 00 -> personaje 0
+;;; 01 -> personaje 1
+;;; 02 -> I think is free
+;;; 03 -> I think is free
+;;; 04 -> I think is free
+;;; 05 -> I think is free
+;;; 06 -> I think is free
+;;; 07 -> I think is free
+;;; 08 -> disparo warrior	
+;;; 09 -> disparo warrior
+;;; 10 -> disparo warrior	
+;;; 11 -> disparo warrior	
+;;; 12 -> disparo warrior	
+;;; 13 -> disparo warrior
+;;; 14 -> disparo warrior
+;;; 15 -> disparo warrior
+;;; 16 -> disparo walk
+;;; 17 -> disparo walk				
+;;; 18 -> disparo walk
+;;; 19 -> disparo walk	
+;;; 20 -> disparo walk	
+;;; 21 -> disparo walk	
+;;; 22 -> disparo walk
+;;; 23 -> disparo walk
+;;; 24 -> disparo mago	
+;;; 25 -> disparo mago
+;;; 26 -> disparo mago
+;;; 27 -> disparo mago
+;;; 28 -> disparo mago
+;;; 29 -> disparo mago
 ;;; 30 -> disparo mago
 ;;; 31 -> disparo mago
 
