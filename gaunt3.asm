@@ -28,7 +28,7 @@ RowKeyb:	equ     847Fh
 
 ;;; Hay que trasladar los cambios de patrones
 ;;; a todas las paginas (pociones, jamon y todo eso
-	
+;;; La funcion que hace el cambio de patrones es LdirPat
 	
 	fname	"gaunt.bin",0
 	forg	0
@@ -48,7 +48,7 @@ RowKeyb:	equ     847Fh
 	
 
 	forg 0956ch-LdAddress
-	call	PutBios		; Put Bios and Rom slot
+	call	PutBios		; Put Bios and Rom slot 
 	
 	forg 09578h-LdAddress
 	call	4014h		; Patch to read mazes from ROM
@@ -414,7 +414,7 @@ VecIntP:
 	ld	a,61h
 	ld	(SpriteAttrib+21*4+3),a
 	ld	(SpriteAttrib+19*4+3),a	
-.t:	call	RestoreSpriteColor 				
+	call	RestoreSpriteColor
 	call	Put2Sprites
 	call	RestorePage
 	call	ChangePatPer
@@ -431,6 +431,9 @@ VecIntP:
 	ei
 	ret
 
+
+
+	
 .hint:	ld	a,1
 	out	(99h),a
 	ld	a,128+15
@@ -788,13 +791,15 @@ sc4:
 	out	(c),a
 	ld	a,128+1
 	out	(c),a
+	ret
 
+	
         ld	a,0C3h		
 	ld	(0fd9ah),a
         ld      hl,VectorInt    
 	ld	(0fd9bh),hl
 	
-	ld	a,160		; Put interrupt line in 160 line
+	ld	a,160		; Put interrupt line in 180 line
         out     (c),a
         ld      a,128+19
         out     (c),a
@@ -1043,24 +1048,11 @@ RestoreSpriteColor:
 	ld	a,(hl)		
 	or	20h
 	
-.write:		
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a
-	out (98h),a	
-	
+.write:	ld	c,b
+	ld	b,16
+.loop:	out	(98h),a
+	djnz	.loop
+	ld	b,c	
 
 .3:	pop	hl
 	inc	hl
