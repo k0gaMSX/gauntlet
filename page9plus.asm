@@ -12,7 +12,19 @@ org	p5load
 
 section		code			
 
+warspr:
+incbin  "war1.spr"
 
+valspr:	
+incbin  "val1.spr"
+
+wizspr:
+incbin  "wiz1.spr"
+
+elfspr:	
+incbin  "elf1.spr"			
+
+	
 maze00:		
 incbin	"maze/maze00",7	
 maze01:
