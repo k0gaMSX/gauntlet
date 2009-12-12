@@ -51,7 +51,28 @@ NWRVRM:		equ	177h
 	forg	0b38ah-LdAddress
 	ret			;avoid tape message 
 	
- 
+
+	forg 0956ch-LdAddress
+	call	PutBios		; Put Bios and Rom slot
+	
+	forg 09578h-LdAddress
+	call	4014h		; Patch to read mazes from ROM
+
+
+
+SaveSP:		equ	0dffdh	
+RamSlotPage1J:	equ	401Ah
+		
+	forg	095cdh-LdAddress
+	org	095cdh
+	call	RamSlotPage1J		; Put again ram pages
+	ld	a,(Rampage0)	
+	call	ENASLT_0
+	ei	
+	ret
+	
+
+		 
 SetPtr_VRAM:	equ	0b444h		
 
 	
@@ -867,11 +888,29 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
         jp      WriteVDP_Reg    ;[0B4A9h]
 
 
+
+romslt:		equ 0f37fh
+rampage0:	equ 0f37eh
+rampage1:	equ 0f37dh		
+rampage2:	equ 0f37ch
+rampage3:	equ 0f37bh	
 EXPTBL:		equ 0fcc1h
-	
+ENASLT:		equ 24h
+		
 PutBios:			
 	di
         ld      a,(EXPTBL)
+	call	ENASLT_0
+	ld	a,(romslt)
+	ld	hl,1<<14
+	call	ENASLT
+	ret
+	
+	
+
+ENASLT_0:
+	di
+	push	af		
         and     3
         ld      b,a                     ; FCC1h BIOS Slot
         in      a,(0A8h)                ; Read A8h slot port
@@ -879,10 +918,10 @@ PutBios:
         or      b
         out     (0A8h),a                ; and set BIOS Slot
 
-        ld      a,(EXPTBL)              ; Check if EXPANDED Slot
+	pop	af			; Check if EXPANDED Slot
         ld      b,a
         and     080h
-        ret     z             ; No. Go to Next Rungame Routine
+        ret	z	            ; No. Go to Next Rungame Routine
 
         ld      a,b            ; Yes. Read 0FFFFh Expanded Slot Port.
         and     000001100b
@@ -895,6 +934,7 @@ PutBios:
         or      b
         ld      (0FFFFh),a          ; and set BIOS Slot
 	ret
+	
 
 
 ReadPTR_VRAM:	equ 0B454h		

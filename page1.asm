@@ -12,12 +12,25 @@ section	code
 	dw	Init
 	dw	0,0,0,0,0,0,0,0
 
+
+LoadMazeRJ:	
+	jp	LoadMazeR
+RamSlotPage0J:	
+	jp	RamSlotPage0
+RamSlotPage1J:	
+	jp	RamSlotPage1
+RamSlotPage2J:	
+	jp	RamSlotPage2
+	
+	
+				
 Init:
 	ld	sp,0f660h
+		
 	call	SaveSlotC
 	call	searchramnormal
 	call	SetIntroPages
-	call	StartLogo	
+	call	StartLogo
 	call	ShowIntro
 
 	call	SetBloadPages

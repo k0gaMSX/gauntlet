@@ -1,4 +1,3 @@
-
 	
 ;;; ********************************************
 ;;; Name:	DisPause
@@ -72,6 +71,272 @@ _DeinstallInt:
         ret
 
 
+
+LoadMazeR:
+	ld	de,.MazeFiles-1
+
+	
+.loop:		
+	push	hl
+	push	de
+	ld	b,5
+	
+.strcmp:		
+	inc	hl
+	inc	de
+	ld	a,(de)
+	cp	(hl)
+	jr	nz,.next
+	djnz	.strcmp
+	jr	.found
+	
+.next:	pop	hl
+	ld	de,9
+	add	hl,de
+	ex	de,hl
+	pop	hl
+	jr	.loop
+
+	
+.found:	pop	de
+	pop	hl
+	ld	hl,7
+	add	hl,de
+	
+	ld	a,(hl)
+	ld	e,5
+	add	a,e
+	
+	inc	hl
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	
+	ex	de,hl
+	ld	de,0d000h
+	ld	bc,3832
+	call	8KLdir	
+.l:	ret
+
+	
+		
+		
+
+
+.MazeFiles:
+	db	"MAZE00"
+	db	maze00>>16
+	dw	maze00&0ffffh
+
+	db	"MAZE01"
+	db	maze00>>16
+	dw	maze01&0ffffh
+	
+	db	"MAZE02"
+	db	0
+	dw	0
+
+
+	db	"MAZE03"
+	db	0
+	dw	0
+
+
+	db	"MAZE04"
+	db	0
+	dw	0
+
+
+	db	"MAZE05"
+	db	0
+	dw	0
+
+
+	db	"MAZE06"
+	db	0
+	dw	0
+
+
+	db	"MAZE07"
+	db	0
+	dw	0
+
+
+	db	"MAZE08"
+	db	0
+	dw	0
+
+
+	db	"MAZE09"
+	db	0
+	dw	0
+
+
+	db	"MAZE10"
+	db	0
+	dw	0
+
+
+	db	"MAZE11"
+	db	0
+	dw	0
+
+
+	db	"MAZE12"
+	db	0
+	dw	0
+
+
+	db	"MAZE13"
+	db	0
+	dw	0
+
+	db	"MAZE14"
+	db	0
+	dw	0
+
+	db	"MAZE15"
+	db	0
+	dw	0
+
+	db	"MAZE16"
+	db	0
+	dw	0
+
+	db	"MAZE17"
+	db	0
+	dw	0
+
+	db	"MAZE18"
+	db	0
+	dw	0
+
+	db	"MAZE19"
+	db	0
+	dw	0
+
+	db	"MAZE20"
+	db	0
+	dw	0
+
+
+	db	"MAZE20"
+	db	0
+	dw	0
+	
+	db	"MAZE21"
+	db	0
+	dw	0
+
+	db	"MAZE22"
+	db	0
+	dw	0
+	
+	db	"MAZE23"
+	db	0
+	dw	0
+	
+	db	"MAZE24"
+	db	0
+	dw	0
+	
+	db	"MAZE25"
+	db	0
+	dw	0
+	
+	db	"MAZE26"
+	db	0
+	dw	0
+	
+	db	"MAZE27"
+	db	0
+	dw	0
+	
+	db	"MAZE28"
+	db	0
+	dw	0
+															
+	db	"MAZE29"
+	db	0
+	dw	0
+
+	db	"MAZE30"
+	db	0
+	dw	0
+		
+	
+
+;;; Name:	8KLdir
+;;; Author:	Roberto Vargas Caballero
+;;; Function:	Ldir from 8k rom ascii8 mapper (6000h-8000h page)
+;;; Input:	
+;;;		hl -> source
+;;;		de -> destinity
+;;;		bc -> number of bytes
+;;;		a -> offset in pages
+;;; Modify:	de,hl,bc,af
+
+	
+	
+
+8KLdir:	push	de
+	push	af
+	ld	a,c
+	or	a
+	jr	z,.noinc
+	inc	a
+	
+.noinc:		
+	ld	c,a
+	ld	a,h
+	and	e0h
+	rlca
+	rlca
+	rlca
+	pop	de
+	add	a,d
+	pop	de
+	ld	(pageldir),a
+	ld	(6800h),a
+
+	bit	7,h
+	jr	z,.loop
+	ld	a,-20h
+	add	a,h
+	ld	h,a
+
+			
+.loop:		
+	bit	7,h
+	jr	z,.putp2
+	
+	
+.putp1:	ld	a,-20h
+	add	a,h
+	ld	h,a		
+	
+	ld	a,(pageldir)
+	inc	a
+	ld	(pageldir),a	
+	ld	(6800h),a
+
+
+.putp2:		
+	ld	a,(hl)
+	ld	(de),a
+	inc	de
+	inc	hl
+	dec	c
+	jp	nz,.loop
+	djnz	.loop
+	ret
+
+	
+section	rdata
+.page:		rb	1
+section code		
+	
+	
 
 ; *** MEMORY SUBROUTINES ***
 
@@ -499,7 +764,7 @@ LoadSecondBload:
 	ld	hl,gaunt.3	
 	xor	a
 	ld	de,4000h
-j:	call	UnTCFV	
+	call	UnTCFV	
 	call	RamSlotPage2
 	ld	hl,4000h
 	ld	de,8000h
@@ -606,6 +871,7 @@ rampage0:	equ 0f37eh
 rampage1:	equ 0f37dh		
 rampage2:	equ 0f37ch
 rampage3:	equ 0f37bh
+pageldir:	equ 0f37ah	
 	
 	
 section	rdata

@@ -1496,9 +1496,7 @@ UnTCFV:
 	pop	hl
 	pop	de
 	pop	af
-
-	
-	
+		
 	ld      ix,-1           ; last_m_off
 
 	ld	a,d
