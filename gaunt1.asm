@@ -1,5 +1,5 @@
 %include "z80r800.inc"
-%include "z80__.inc"
+%include "z80().inc"
 
 MainLoop:	equ	0b258h
 SetPtrVram:	equ	0b444h
@@ -74,6 +74,7 @@ Sc2toSc4:
 	ld	hl,Pallette
 	call	PutPal
 	jp	MainLoop
+
 
 
 
@@ -616,6 +617,10 @@ ChangeWalls:
 	jp ChangeWallColor
 
 
+	res	6,a
+	ld	b,a
+	ld	a,1
+        jp      WriteVDP_Reg           ;[0B4A9h]
 
 
 
@@ -635,6 +640,9 @@ WallColorList:	db 70h,5,40h,2
 
 ;;; BUSCAR SITIO PARA METER ESTA RUTINA
 ;;; ESTA USADA -> ESTE TROZO HACE QUE SE CUELGUE SI SE PONE EN LA DIRECCION CORRECTA
+
+RELMEM:	equ 0da00h
+
 	forg 	08000h-LdAddress
 	org	08000h
 
@@ -660,18 +668,18 @@ WallColorList:	db 70h,5,40h,2
 	call	SetPage
 	ei
 
-	ld	hl,ChangeWallColorI
-	ld	de,ChangeWallColor
-	ld	bc,MakeColorEnd-ChangeWallColor
+	ld	hl,RelocableCode
+	ld	de,RELMEM
+	ld	bc,RelocableCodeEnd-ChangeWallColor
 	ldir
 	jp	8300h
 
 
 
+;;; Inicio codigo conflictivo
 
-
-ChangeWallColorI:
-	org	0da00h
+RelocableCode:
+	org	RELMEM
 ChangeWallColor:		; ESTOS VALORES SE PUEDEN PONER DIRECTAMENTE Y DEJAR ESPACIO
 	pop	de
 	ld	hl,680h
@@ -759,11 +767,26 @@ PutLineSP:
 	ret
 
 
+InitScr:	equ 0b590h
+
+InitScrP:
+	ld	a,3
+	di
+	out	(99h),a
+	ld	a,4+128
+	out	(99h),a
+	call	EnableSCR
+	jp	InitScr+3
 
 
-MakeColorEnd:		db 0
 
+RelocableCodeEnd: db 0
 
+;;; Fin de codigo conflictivo
+
+	forg	InitScr-LdAddress
+	org	InitScr
+	jp	InitScrP
 
 
 	forg 9AD4h-LdAddress
