@@ -5057,7 +5057,7 @@ ChangeSpetialPotion:
 	ld	c,a
 	ld	hl,T9FA6	;[9FA6h]
 	add	hl,bc
-	ld	de,2170h
+	ld	de,2170h	; Aqui se escribe el color de la pocima, pero no se en que se basa
 	ld	a,(hl)
 	inc	hl
 	ld	b,4

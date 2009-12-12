@@ -368,7 +368,7 @@ MoveHand:
 
 PutHand: 
 	ld	hl,COOR_XY
-	ld	b,8
+	ld	b,16
 	
 .loop:		
 	ld	e,(hl)
@@ -388,7 +388,7 @@ PutHand:
 	ld	a,1
 	ld	hl,COOR_XY
 	ld	de,03600h	
-	ld	bc,32
+	ld	bc,16*4
 	call	wvram
 	xor	a
 	ld	(OffsetX),a
@@ -1048,25 +1048,38 @@ BuildHand:
 	ld	de,3600h
 	ld	bc,4*32
 	call	svram
-
-	
-	ld	l,13
-	ld	a,1
-	ld	de,03400h
-	ld	bc,64
-	call	svram
-	
-	ld	l,0
-	ld	a,1
-	ld	de,03440h
-	ld	bc,64
-	call	svram
-		
+			
 	ld	a,1
 	ld	hl,hand
 	ld	de,03800h
 	ld	bc,100h
 	call	wvram
+
+	ld	l,0
+	ld	a,1
+	ld	bc,16*4
+	ld	de,3400h
+	call	svram			
+
+	ld	l,10
+	ld	a,1
+	ld	bc,16*4
+	ld	de,3400h+16*4
+	call	svram
+
+	ld	l,11
+	ld	a,1
+	ld	bc,16*4
+	ld	de,3400h+32*4
+	call	svram
+
+
+	ld	l,13
+	ld	a,1
+	ld	bc,16*4
+	ld	de,3400h+48*4
+	call	svram					
+	
 	
 	ld	a,1
 	ld	hl,COOR_XY
@@ -1307,7 +1320,7 @@ ST_AMPL:
         ld      e,8Fh           ;'~O'
         call    LEE_JOY           ;[88DEh]
         ld      (JOYPORT1),a       ;[9439h]
-        ld      e,0CFh          ;'-bœ'-A
+        ld      e,0CFh          ;'.béœ'
         call    LEE_JOY           ;[88DEh]
         ld      (JOYPORT2),a       ;[943AH]
 
@@ -1701,43 +1714,7 @@ GetBit: add     a,a
         ret
 	
 
-			
-
-	
-hand:	 db 060h,078h,05eh,03fh,017h,00fh,005h,002h
-	 db 005h,00bh,00bh,007h,006h,008h,00eh,00fh
-	 db 000h,000h,000h,080h,0e0h,0f8h,01eh,0e7h
-	 db 0ffh,0ffh,05fh,03fh,03fh,01fh,09eh,00eh
-	 db 000h,000h,000h,000h,000h,000h,000h,080h
-	 db 0e0h,0f8h,0feh,0bfh,07fh,07fh,0feh,0fch
-	 db 000h,000h,000h,000h,000h,000h,000h,000h
-	 db 000h,000h,000h,080h,0e0h,018h,004h,004h
-	 db 002h,00ch,00eh,007h,001h,000h,000h,000h
-	 db 000h,000h,000h,000h,000h,000h,000h,000h
-	 db 011h,05eh,09eh,01eh,00fh,000h,000h,000h
-	 db 000h,000h,000h,000h,000h,000h,000h,000h
-
-	 db 0fch,0f8h,0f8h,0f8h,078h,038h,018h,008h
-	 db 00ch,005h,006h,003h,001h,000h,000h,000h
-	 db 00ah,006h,00ah,016h,02ah,016h,02ah,056h
-	 db 0ach,054h,0a8h,050h,0e0h,000h,000h,000h
-	
-	 db 078h,0feh,0ffh,07fh,03fh,01fh,00fh,007h
-	 db 00fh,01fh,01fh,01fh,01fh,01fh,01fh,01fh
-	 db 000h,000h,080h,0e0h,0f8h,0feh,0ffh,0ffh
-	 db 0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
-	 db 000h,000h,000h,000h,000h,000h,080h,0e0h
-	 db 0f8h,0feh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
-	 db 000h,000h,000h,000h,000h,000h,000h,000h
-	 db 000h,000h,080h,0e0h,0f8h,0fch,0feh,0ffh
-	 db 01fh,01fh,01fh,00fh,007h,001h,000h,000h
-	 db 000h,000h,000h,000h,000h,000h,000h,000h
-	 db 0ffh,0ffh,0ffh,0ffh,0dfh,08fh,000h,000h
-	 db 000h,000h,000h,000h,000h,000h,000h,000h
-	 db 0ffh,0ffh,0ffh,0ffh,0ffh,07fh,03fh,01fh
-	 db 01fh,00fh,00fh,007h,003h,001h,000h,000h
- 	 db 0feh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
-	 db 0feh,0feh,0fch,0f8h,0f0h,0e0h,000h,000h
+hand:	incbin "hand.spr"
 
 
 datab:	equ	$	
@@ -1752,21 +1729,41 @@ COOR_XY_sh:
 	 db YINICIAL,XINICIAL
 	 db 0,0
 	 db YINICIAL,XINICIAL+16
-	 db 4,0
+	 db 4*4,0
 	 db YINICIAL+16,XINICIAL
-	 db 8,0
+	 db 8*4,0
 	 db YINICIAL+16,XINICIAL+16
-	 db 12,0
+	 db 12*4,0
 
-		
 	 db YINICIAL,XINICIAL
-	 db 16,0
+	 db 1*4,0
 	 db YINICIAL,XINICIAL+16
-	 db 20,0
+	 db 5*4,0
 	 db YINICIAL+16,XINICIAL
-	 db 24,0
+	 db 9*4,0
 	 db YINICIAL+16,XINICIAL+16
-	 db 28,0
+	 db 13*4,0
+
+	 db YINICIAL,XINICIAL
+	 db 2*4,0
+	 db YINICIAL,XINICIAL+16
+	 db 6*4,0
+	 db YINICIAL+16,XINICIAL
+	 db 10*4,0
+	 db YINICIAL+16,XINICIAL+16
+	 db 14*4,0
+
+	 db YINICIAL,XINICIAL
+	 db 3*4,0
+	 db YINICIAL,XINICIAL+16
+	 db 7*4,0
+	 db YINICIAL+16,XINICIAL
+	 db 11*4,0
+	 db YINICIAL+16,XINICIAL+16
+	 db 15*4,0			
+
+
+	
 	
 
 rcopy1p_sh:	db	1,0,   213,3, 80,0,  82,3, 32,0, 18,0, 0,0, 0d0h
@@ -1800,7 +1797,7 @@ section	rdata
 	
 databss:	equ	$
 hmmc:		rb	11
-COOR_XY:	rw	16	
+COOR_XY:	rw	32	
 rcopy1p:	rb	15
 rcopy2p:	rb	15
 copy1p:		rb	15

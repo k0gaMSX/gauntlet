@@ -26,6 +26,10 @@ NWRVRM:		equ	177h
 RowKeyb:	equ     847Fh
 
 
+
+	;; BAA4 sitio libre.
+;;; Colores estan en 3a0d
+
 ;;; Hay que trasladar los cambios de patrones
 ;;; a todas las paginas (pociones, jamon y todo eso
 ;;; La funcion que hace el cambio de patrones es LdirPat
@@ -1281,8 +1285,34 @@ LdirPat2:
 	
 	
 RelocableCodeEnd: equ	$
-	
 ;;; Fin de codigo conflictivo
+	
+	
+;;; db  9bh, 70h,00h, 60h,0cbh, 60h,0c0h,0c0h,     0b7h, 05h, 00h,0c0h,6bh,06h, 06h, 06h
+;;; db 0cbh,0c0h,60h,0c0h, 6bh, 60h, 60h, 60h,     0b6h, 06h, 06h,06h,0b6h,06h, 60h, 06h
+	
+
+
+
+	forg	0ba06h-LdAddress ; Tabla de colores de la pocima dorada.
+
+        db  7bh, a0h,00h, 80h,07bh,80h,070h,070h
+	db 0b5h, 0ah,00h,070h, 8bh,08h, 08h, 08h
+	db 07bh,070h,80h,070h, 8bh,80h, 80h, 80h
+	db 0b8h, 08h, 08h,08h,0b8h,08h, 80h, 08h
+
+	
+
+	forg 09fa6h-LdAddress
+;;; db  0,0
+;;; La funcion de cambio de pociones especiales esta en ChangeSpetialPotion:	
+	
+		
+
+
+	
+		
+
 
 	forg	InitScr-LdAddress
 	org	InitScr
@@ -1326,23 +1356,23 @@ RefreshScrD:	db 0
 
 LdirPat:
 	push	hl
-	push	hl        
+	push	hl
         ld      de,28E8h             ;copiamos los patrones de las
         ld      bc,18h               ;salidas a 4 y 8
         ldir    
-
+	
         ld      de,2A88h             ;El patron del Ex
         ld      c,8                  ;
         ldir
-
+	
         ld      de,20E8h             ;El patron del IT
         ld      c,18h                ;ademas del de la sidra
         ldir
-
+	
         ld      de,2288h
         ld      c,8
         ldir
-
+	
 	pop     hl
         ld      de,28E8h+800h
         ld      bc,18h

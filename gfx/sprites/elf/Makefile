@@ -6,7 +6,7 @@ all: $(spr)
 
  
 $(spr): %.spr: %.sr5
-	$(SPR) $< 1
+	$(SPR) $< 
 	dd if=$(subst sr5,DAT,$<) of=$@ bs=1 count=768 
 
 
