@@ -88,6 +88,11 @@ Pallette:
 	db 11h,1, 73h,4, 70h,0, 44h,4, 00h,5, 50h,3, 27h,2, 70h,6
 	db 70h,4, 77h,7, 40h,1, 00h,0, 37h,5, 57h,0, 65h,0, 76h,4
 
+TitlePallette:
+	db  00h,0, 00h,5, 02h,0, 40h,2, 14h,0, 27h,0, 50h,0, 37h,4
+	db  70h,0, 73h,4, 70h,6, 74h,7, 03h,4, 62h,3, 50h,2, 77h,7
+	
+
 PutPal:	
 	xor	a
 	out	(99h),a
@@ -297,7 +302,6 @@ RefreshScrI:
 	call	WriteLinesSc4
 	ld	b,64
 	call	WriteLinesSc4
-;;; AÑADIR AQUI ACTUALIZACION DE SPRITES
 
 	call	RestoreSpriteColor
 	ld	de,1e00h
@@ -887,7 +891,7 @@ RestoreSpriteColor:
 	ld	a,14+128
 	out	(99h),a
 
-	ld	b,32
+	ld	b,29
 	ld	hl,SpriteAttrib
 	ld	de,01c00h
 	call	WritePTR_VRAMI
