@@ -5,13 +5,10 @@
 
 LdAddress:	equ	87d0h-7
 
-   
+
 
 	fname	"gaunt.bin",0
 
-;;;	forg 	37h
-;;;	incbin	"sprites/warrior/s-war-1.DAT"
-	
 	forg	9800h-LdAddress
 	incbin  "set1.col"
 	incbin  "set1.pat"

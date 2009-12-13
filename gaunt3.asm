@@ -333,7 +333,7 @@ RefreshScrI:
 	call	WriteLinesSc4
 	call	WriteLinesSc4
 	ld	b,96
-;;; call	WriteLinesSc4   ;DEPURACION
+        call	WriteLinesSc4   ;DEPURACION
 	ret
 
 
@@ -935,7 +935,7 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
 
 
 .559:   ld	e,a
-;;; xor	a			;DEPURACION
+        xor	a			;DEPURACION
 	out     (98h),a
 	ld	a,e
 	inc	a
@@ -1284,16 +1284,16 @@ RelocableCodeEnd: equ	$
 
 	forg	0ba06h-LdAddress ; Tabla de colores de la pocima dorada.
 
-        db  7bh, a0h,00h, 80h,07bh,80h,070h,070h
-	db 0b5h, 0ah,00h,070h, 8bh,08h, 08h, 08h
-	db 07bh,070h,80h,070h, 8bh,80h, 80h, 80h
+        db 09bh,070h,000h,090h,09bh,090h,0c0h,000h
+        db 0b7h,070h,000h,0c0h,0cbh,0c0h,060h,000h
+	db 07bh,070h,70h,070h, 8bh,80h, 80h, 80h
 	db 0b8h, 08h, 08h,08h,0b8h,08h, 80h, 08h
 
 
 
-	forg 09fa6h-LdAddress	;Parche para meter la nueva tabla de colores
-        ;; db  0c0h,060h                     ;de las pociones especiales
-        ;; db  070h,080h
+	forg 09fa6h-LdAddress	;Parche para meter la nueva tabla de
+                                ;colores de las pociones especiales
+
         db  090h,070h           ;Escudo  -FIXED
         db  080h,050h           ;Redonda -FIXED
         db  070h,040h           ;raro    -FIXED
