@@ -6,7 +6,7 @@
 
 
 
-section code	
+section code
 
 InitialWait:	equ	27
 
@@ -46,7 +46,7 @@ InitialWait:	equ	27
 
 
 
-StartLogo:		
+StartLogo:
 	ld      a,[FCC1h]
         ld      hl,002Dh
         call    000Ch
@@ -57,10 +57,10 @@ StartLogo:
 	;out	[A7h],a
 .Z80:
 
-	
+
 	ld	hl,FrameCtr_sh
 	ld	de,FrameCtr
-	ld	bc,FadeInPtr-FrameCtr+2	
+	ld	bc,FadeInPtr-FrameCtr+2
 	ldir
 
 	ld	hl,BG_sh
@@ -74,7 +74,11 @@ StartLogo:
 	ldir
 
 	call	InstallInt
-	
+	ld	ix,$38+3
+	ld	iy,(rampage0-1)
+	jp	CALSLT
+
+.fromPg0:
         ld      hl,NewFD9A		; setup interrupt hooks
         ld      de,FD9Ah
         ld      bc,3
@@ -104,7 +108,7 @@ StartLogo:
 
 	ld	a,00011111b	; sc5 page 0 / name table 7C00h
 	VDP	2
-	
+
 	ld	a,00001000b	; single pattern table at 4000h
 	VDP	4
 	ld	a,00001000b	; sprite pattern table at 4000h
@@ -137,13 +141,13 @@ StartLogo:
 	ld	b,224
 .bgc2:	out	[98h],a
 	djnz	.bgc2
-	
+
 	SetVRAM	3000h,w		; setup sprite color/attribute table
 	ld	a,1
 	ld	b,0
-.ctab1:	out	[98h],a	
+.ctab1:	out	[98h],a
 	djnz	.ctab1
-.ctab2:	out	[98h],a	
+.ctab2:	out	[98h],a
 	djnz	.ctab2
 	ld	hl,Sprites
 	ld	bc,8198h
@@ -152,14 +156,14 @@ StartLogo:
 	SetVRAM	3400h,w		; setup sprite color/attribute table
 	ld	a,15
 	ld	b,0
-.ctab3:	out	[98h],a	
+.ctab3:	out	[98h],a
 	djnz	.ctab3
-.ctab4:	out	[98h],a	
+.ctab4:	out	[98h],a
 	djnz	.ctab4
 	ld	hl,Sprites2
 	ld	bc,7198h
 	otir
-	
+
 	SetVRAM	7C00h,w		; setup name table
 	ld	b,14
 	xor	a
@@ -409,15 +413,33 @@ FadeOut:
 ;**********************
 
 InstallInt:
-        di
-        ld      a,[0038h]
-        ld      hl,[0038h+1]
-        ld      [OldRST38],a
-        ld      [OldRST38+1],hl
-        ld      a,C3h           ; jp
-        ld      hl,RST38
-        ld      [0038h],a
-        ld      [0038h+1],hl
+	di
+	ld	b,6
+	ld	de,$38
+	ld	hl,.code
+.loop:
+	push	bc
+	push	de
+	push	hl
+	ld	l,(hl)
+	ex	de,hl
+	ld	a,(rampage0)
+	call	WRSLT
+	pop	hl
+	pop	de
+	pop	bc
+	inc	de
+	inc	hl
+	djnz	.loop
+
+        ;ld      a,[0038h]
+        ;ld      hl,[0038h+1]
+        ;ld      [OldRST38],a
+        ;ld      [OldRST38+1],hl
+        ;ld      a,C3h           ; jp
+        ;ld      hl,RST38
+        ;ld      [0038h],a
+        ;ld      [0038h+1],hl
 
         ld      hl,FD9Ah                ; save FD9A & FD9F
         ld      de,OldFD9A
@@ -425,12 +447,17 @@ InstallInt:
         ldir
         ret
 
+.code:
+	jp	RST38
+	jp	StartLogo.fromPg0
+
+
 DeinstallInt:
         di
-        ld      a,[OldRST38]
-        ld      hl,[OldRST38+1]
-        ld      [0038h],a
-        ld      [0038h+1],hl
+        ;ld      a,[OldRST38]
+        ;ld      hl,[OldRST38+1]
+        ;ld      [0038h],a
+        ;ld      [0038h+1],hl
 
         ld      hl,OldFD9A              ; restore FD9A & FD9F
         ld      de,FD9Ah
@@ -444,7 +471,7 @@ RST38:  push    af
         rlca
         call    c,FD9Fh
         pop     af
-        ei      
+        ei
         ret
 
 VblankInterrupt:
@@ -493,7 +520,7 @@ VblankInterrupt:
 	ld	b,20h
 	otir
 	ld	hl,BG+30*8
-	ld	b,20h	
+	ld	b,20h
 	otir
 
         ld      a,01100111b     ; sprite color/attribute table at 3000h
@@ -558,7 +585,7 @@ LineInterruptV:
         ld      a,15+128
         out     [99h],a
 	ret
-	
+
 LineInterrupt128:
         ld      a,1
         out     [99h],a
@@ -614,11 +641,11 @@ UnRLEV:		ld	c,98h
 .rle.loop:	out	[c],a
 		djnz	.rle.loop
 		jr	.loop
-
+/;
 %macro RGB %n,%n,%n
 %def16 #2*256+#1*16+#3
 %endmacro
-
+\;
 FadeInPal:	%def8	0,0,1,2,3,4,5
 LogoPal_sh:
         RGB 0,0,0
@@ -686,7 +713,7 @@ BG_sh:
 
 ; The New Image
 
-		
+
 %def8	11111000b
 %def8	00100000b
 %def8	00100000b
@@ -939,7 +966,7 @@ BG_sh:
 %def8	00000000b
 %def8	00000000b
 
-f1:		
+f1:
 
 Map:
 %def8	 0, 2, 4, 6, 8
@@ -1007,7 +1034,7 @@ FadeInPtr_sh:	dw	FadeInPal
 section rdata
 
 FrameCtr:	rb	1
-FadeInPtr:	rw	1		
+FadeInPtr:	rw	1
 OldRST38:	rb	3
 OldFD9A:	rb	5
 OldFD9F:	rb	5
@@ -1019,5 +1046,5 @@ BGNewLine:	rb	1
 LogoPal:	rb	32
 BG:		rb	f1-BG_sh
 
-	
+
 section code
