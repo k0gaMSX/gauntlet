@@ -213,8 +213,8 @@ InitPatScr:
 	forg 8545h-LdAddress
 	org 8545h
 	nop			; Anular llamada a cambio de patron
-	nop 			; a
-	nop			; a
+	nop 			; porque ya se actualiza en la interrupcion
+	nop			;
 
 
 
@@ -415,8 +415,20 @@ WriteLinesSc4:
 VecIntP:
         push    af
         in      a,(99h)
-	add	a,a
-	jp	nc,.hint
+	;; add	a,a
+	;; call	nc,.hint
+
+	ld	a,1
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+	in	a,(99h)
+
+	xor	a
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+
         ld      a,(RefreshON)   ;[84D5h]
 	or	a
 	jp	z,.out
@@ -452,28 +464,15 @@ VecIntP:
 	pop	hl
 	pop	de
 
+
 .out:	pop	af
 	ei
-	ret
+        ret
 
 
 
 
-.hint:	ld	a,1
-	out	(99h),a
-	ld	a,128+15
-	out	(99h),a
-	in	a,(99h)
 
-;;; HERE THE SCREEN SPLIT
-
-	xor	a
-	out	(99h),a
-	ld	a,128+15
-	out	(99h),a
-	pop	af
-	ei
-	ret
 
 
 
@@ -534,7 +533,7 @@ ENASLT_0:
 
 	forg	0b801h-LdAddress
 	org	0b801h
-	ret	; Este ret es para evitar la escritura
+	;; ret	; Este ret es para evitar la escritura
 		;;; de los datos de los personajes
 
 		;;; La funcion que escribe en el marcador es
@@ -559,7 +558,7 @@ ChangePatPJ_1:	equ $
 	forg	8555h-LdAddress
 	org	8555h
 ContItera:	equ 84d9h
-
+TIME_CHANGE_ENEMY:      equ 6
 
 ChangePatPer:
 
@@ -567,7 +566,7 @@ ChangePatPer:
 
         ld      a,(ContItera)       ;[84D9h]
 	inc	a
-	cp	6
+	cp	TIME_CHANGE_ENEMY
 	jr	nz,.9		;[85ABh]
 
         ld	a,(.PaginaV)	;[84DAh]
@@ -767,6 +766,7 @@ RELMEM:	equ 0f41fh
 	forg 	08000h-LdAddress
 	org	08000h
 
+
 	ld	a,-1
 	ld	hl,Spritecolorcache
 	ld	de,Spritecolorcache+1
@@ -818,8 +818,6 @@ sc4:
 	out	(c),a
 	ld	a,128+1
 	out	(c),a
-	ret
-
 
         ld	a,0C3h
 	ld	(0fd9ah),a
@@ -833,8 +831,16 @@ sc4:
 
 	ld      a,(Rg0Sav)	; Enable interrupt line vertical
         set     4,a
+        ld      (Rg0Sav),a
         out     (c),a
         ld      a,128+0
+        out     (c),a
+
+	ld      a,(Rg1Sav)	; Disable vertical retrace interrupt
+        res     5,a
+        ld      (Rg1Sav),a
+        out     (c),a
+        ld      a,128+1
         out     (c),a
 	ret
 
@@ -935,7 +941,6 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
 
 
 .559:   ld	e,a
-        xor	a			;DEPURACION
 	out     (98h),a
 	ld	a,e
 	inc	a
@@ -1268,11 +1273,6 @@ LdirPat2:
         ld      c,8
         ldir
 	ret
-
-
-
-
-
 
 
 
