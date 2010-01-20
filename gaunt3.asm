@@ -2,6 +2,7 @@
 %include "z80r800.inc"
 %include "z80().inc"
 
+PrintDigit:     equ     0B6D9h
 MainLoop:	equ	0b258h
 SetPtrVram:	equ	0b444h
 NumSP:		equ	800h
@@ -413,11 +414,8 @@ WriteLinesSc4:
 
 
 VecIntP:
-        push    af
+        push    af              ;We are using line interrupt
         in      a,(99h)
-	;; add	a,a
-	;; call	nc,.hint
-
 	ld	a,1
 	out	(99h),a
 	ld	a,128+15
@@ -428,6 +426,9 @@ VecIntP:
 	out	(99h),a
 	ld	a,128+15
 	out	(99h),a
+
+        ld      a,3
+        call    set_cfondo
 
         ld      a,(RefreshON)   ;[84D5h]
 	or	a
@@ -460,6 +461,8 @@ VecIntP:
 	ld	(RefreshScrD),a
 .oui:
 	call	ControlSound	;Quitar el salvar registros
+        ld      a,bh
+        call    set_cfondo
 	pop	bc
 	pop	hl
 	pop	de
@@ -471,9 +474,19 @@ VecIntP:
 
 
 
+PrintDigitMarquee:
+        ;; call PutSplitPage     ;This comment is due this code hang msx
+        ;; call PrintDigit
+        ;; jp   RestorePage
+        ret
 
 
-
+set_cfondo:
+	di
+	out	(99h),a
+	ld	a,128+7
+	out	(99h),a
+	ret
 
 
 
@@ -481,6 +494,7 @@ RestorePage:
 	ld	a,(vrampage)
 SetPage:
 	ld	(vrampage),a
+SetPage_1:
 	di
 	out	(99h),a
 	ld	a,14+128
@@ -533,13 +547,38 @@ ENASLT_0:
 
 	forg	0b801h-LdAddress
 	org	0b801h
-	;; ret	; Este ret es para evitar la escritura
-		;;; de los datos de los personajes
+;Nombre: PrintDataPer
+;Objetivo: Creo que se dedica a imprimir la vida en la pantalla
+;Entrada: hl -> Puntero al numero a imprimir
+;         b -> longitud del numero
 
-		;;; La funcion que escribe en el marcador es
-                ;;; InitPJ
 
+PrintDataPer:
+        ld      c,0
+        bit     1,(iy+12h)              ;Y QUE CONO ES ESTO????
+	jr	z,.593		;[0B80Dh]
 
+	ld	a,l
+	add	a,20h		;' '
+	ld	l,a
+
+.593:   ld      a,(hl)          ;El bucle esta en dos partes
+	rrca
+	rrca
+	rrca
+	rrca
+        call    PrintDigitMarquee
+	ld	a,b
+	dec	a
+	jr	nz,.594		;[0B81Bh]
+	set	0,c
+
+.594:   ld      a,(hl)          ;para desmpaquetar el numero BCD
+        call    PrintDigitMarquee
+	inc	hl
+        djnz    .593            ;[0B80Dh]
+
+	ret
 
 
 
@@ -824,7 +863,7 @@ sc4:
         ld      hl,VectorInt
 	ld	(0fd9bh),hl
 
-	ld	a,160		; Put interrupt line in 180 line
+	ld	a,120		; Put interrupt line
         out     (c),a
         ld      a,128+19
         out     (c),a
@@ -1015,22 +1054,19 @@ wizspr:		equ 6600h
 elfspr:		equ 6900h
 PutSlotRam:	equ 95CDh
 
+PutSplitPage:
+        ld      a,4
+        jp      SetPage_1
+
 
 PutSpritePage:
-	di
 	ld	a,1
-	out	(99h),a
-	ld	a,14+128
-	out	(99h),a
-	ret
+        jp      SetPage_1
+
 
 PutPatternPage:
-	di
 	xor	a
-	out	(99h),a
-	ld	a,128+14
-	out	(99h),a
-	ret
+        jp      SetPage_1
 
 
 
