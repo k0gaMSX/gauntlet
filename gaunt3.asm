@@ -187,17 +187,13 @@ InitPatScr:
 	ld	de,2000h
         call    SetPtr_VRAM           ;[0B444h]
 
+        ld      b,3
+.loop:  push    bc
         ld      hl,2000h              ;y hago lo mismo con 200 bytes de la
         ld      bc,98h                ;tabla de colores del banco 1
         call    WritePortRW_8           ;[0B585h]
-
-	ld	hl,2000h
-	ld	bc,98h
-        call    WritePortRW_8           ;[0B585h]
-
-	ld	hl,2000h
-	ld	bc,98h
-        call    WritePortRW_8           ;[0B585h]
+        pop     bc
+        djnz    .loop
 
         ld      hl,PatternGenPers
         ld      de,PatternMap        ;[0C000h]
@@ -208,7 +204,7 @@ InitPatScr:
 .pointer:	dw	0
 
 
-	;; AQUI HAY ALGO DE SITIO LIBRE
+	;; AQUI HAY ALGO DE SITIO LIBRE!!!!!! <- 28-02-2010
 
 
 	forg 8545h-LdAddress
@@ -334,7 +330,7 @@ RefreshScrI:
 	call	WriteLinesSc4
 	call	WriteLinesSc4
 	ld	b,96
-        call	WriteLinesSc4   ;DEPURACION
+        call	WriteLinesSc4
 	ret
 
 
@@ -865,7 +861,7 @@ sc4:
         ld      hl,VectorInt
 	ld	(0fd9bh),hl
 
-	ld	a,120		; Put interrupt line
+	ld	a,150		; Put interrupt line
         out     (c),a
         ld      a,128+19
         out     (c),a
