@@ -475,9 +475,11 @@ VecIntP:
 
 
 PrintDigitMarquee:
-        ;; call PutSplitPage     ;This comment is due this code hang msx
-        ;; call PrintDigit
-        ;; jp   RestorePage
+        di
+        call PutSplitPage     ;This comment is due this code hang msx
+        call PrintDigit
+        call RestorePage
+        ei
         ret
 
 
@@ -500,8 +502,8 @@ SetPage_1:
 	ld	a,14+128
 	out	(99h),a
 	ret
-vrampage:	db	0
 
+vrampage:	db	0
 
 
 
