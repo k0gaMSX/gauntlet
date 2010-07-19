@@ -484,7 +484,9 @@ VecIntP:
 
 PrintDigitMarquee:
         di
+        push af
         call PutSplitPage
+        pop  af
         call PrintDigit
         call RestorePage
         ei
