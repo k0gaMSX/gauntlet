@@ -364,7 +364,7 @@ RefreshSpr:
 	ld	a,(0F3E0h)
 	ld	b,a
 	ld	a,1
-        call    WriteVDP_Reg           ;[0B4A9h]
+        call      WriteVDP_Reg           ;[0B4A9h]
 .label:	jp	WaitTime
 
 
@@ -412,7 +412,10 @@ WriteLinesSc4:
 VecIntP:
         push    af              ;We are using line interrupt
         in      a,(99h)
-	ld	a,1
+        rlca
+        jp      c,.vhInt
+
+	ld	a,1             ;line interrupt
 	out	(99h),a
 	ld	a,128+15
 	out	(99h),a
@@ -422,7 +425,15 @@ VecIntP:
 	out	(99h),a
 	ld	a,128+15
 	out	(99h),a
+        call    ViewSplitPage
+        pop     af
+        ei
+        ret
 
+
+
+.vhInt:                         ;Vertical interrupt
+        call    ViewNormalPage
         ld      a,3
         call    set_cfondo
 
@@ -472,7 +483,7 @@ VecIntP:
 
 PrintDigitMarquee:
         di
-        call PutSplitPage     ;This comment is due this code hang msx
+        call PutSplitPage
         call PrintDigit
         call RestorePage
         ei
@@ -485,6 +496,20 @@ set_cfondo:
 	ld	a,128+7
 	out	(99h),a
 	ret
+
+
+
+ViewPage:
+        ld      (ViewPageData),a
+
+ViewPageSP:
+	or	3
+	di
+	out	(99h),a
+	ld	a,4+128
+	out	(99h),a
+        ret
+ViewPageData: db 0
 
 
 
@@ -606,26 +631,18 @@ ChangePatPer:
 	cp	TIME_CHANGE_ENEMY
 	jr	nz,.9		;[85ABh]
 
-        ld	a,(.PaginaV)	;[84DAh]
+        ld	a,(PaginaV)	;[84DAh]
         add	a,8
 	cp	18h
 	jr	nz,.1
 	xor	a
-.1:	ld      (.PaginaV),a       ;[84DAh] otro sitio
-
-
-	or	3
-	di
-	out	(99h),a
-	ld	a,4+128
-	out	(99h),a
+.1:	ld      (PaginaV),a       ;[84DAh] otro sitio
 
 	xor	a
 .9:     ld      (ContItera),a   ;[84D9h] En esta primera llamada creo que
 	ret
 
-
-.PaginaV:	db 0
+PaginaV:	db 0
 
 
 ;;; ***********************************************************************
@@ -873,12 +890,12 @@ sc4:
         ld      a,128+0
         out     (c),a
 
-	ld      a,(Rg1Sav)	; Disable vertical retrace interrupt
-        res     5,a
-        ld      (Rg1Sav),a
-        out     (c),a
-        ld      a,128+1
-        out     (c),a
+	;; ld      a,(Rg1Sav)	; Disable vertical retrace interrupt
+        ;; res     5,a
+        ;; ld      (Rg1Sav),a
+        ;; out     (c),a
+        ;; ld      a,128+1
+        ;; out     (c),a
 	ret
 
 
@@ -1055,6 +1072,16 @@ PutSlotRam:	equ 95CDh
 PutSplitPage:
         ld      a,4
         jp      SetPage_1
+
+
+ViewNormalPage:
+        ld      a,(ViewPageData)
+        jp      ViewPageSP
+
+ViewSplitPage:
+        ld      a,20h
+        jp      ViewPageSP
+        ret
 
 
 PutSpritePage:
