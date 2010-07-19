@@ -244,6 +244,7 @@ LdirSpetialPotion:
 
 	forg	0b483h-LdAddress
 	org	0b483h
+InitAttSp:
 	ld      (8489h),sp      ;[8489h]
 	ld	b,22h
 	ld	sp,0D323h
@@ -433,7 +434,7 @@ VecIntP:
 
 
 .vhInt:                         ;Vertical interrupt
-        call    ViewNormalPage
+        call    RestoreViewPage
         ld      a,3
         call    set_cfondo
 
@@ -498,18 +499,15 @@ set_cfondo:
 	ret
 
 
-
+RestoreViewPage:
+        ld      a,(PaginaV)
 ViewPage:
-        ld      (ViewPageData),a
-
-ViewPageSP:
 	or	3
 	di
 	out	(99h),a
 	ld	a,4+128
 	out	(99h),a
         ret
-ViewPageData: db 0
 
 
 
@@ -979,6 +977,8 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
 	out	(99h),a
 	ld	a,4+128
 	out	(99h),a
+        xor     a
+        ld      (PaginaV),a
 	call	DisableSCR
 
 	ld	de,1800h
@@ -1074,13 +1074,9 @@ PutSplitPage:
         jp      SetPage_1
 
 
-ViewNormalPage:
-        ld      a,(ViewPageData)
-        jp      ViewPageSP
-
 ViewSplitPage:
         ld      a,20h
-        jp      ViewPageSP
+        jp      ViewPage
         ret
 
 
