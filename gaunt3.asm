@@ -416,6 +416,9 @@ VecIntP:
         rlca
         jp      c,.vhInt
 
+        call    ViewSplitPage
+        call    SetSplitColorTable
+
 	ld	a,1             ;line interrupt
 	out	(99h),a
 	ld	a,128+15
@@ -426,7 +429,6 @@ VecIntP:
 	out	(99h),a
 	ld	a,128+15
 	out	(99h),a
-        call    ViewSplitPage
         pop     af
         ei
         ret
@@ -435,8 +437,9 @@ VecIntP:
 
 .vhInt:                         ;Vertical interrupt
         call    RestoreViewPage
-        ld      a,3
-        call    set_cfondo
+        call    SetNormalColorTable
+        ;; ld      a,3
+        ;; call    set_cfondo
 
         ld      a,(RefreshON)   ;[84D5h]
 	or	a
@@ -511,6 +514,18 @@ ViewPage:
 	out	(99h),a
         ret
 
+
+SetNormalColorTable:
+        xor     a
+        jr      SetColorTable
+SetSplitColorTable:
+        ld      a,4
+SetColorTable:
+        di
+        out     (99h),a
+        ld      a,128+10
+        out     (99h),a
+        ret
 
 
 RestorePage:
@@ -704,6 +719,18 @@ GetNamePJ:
 	ld	(hl),220	; Modificacion para ocultar sprites
 
 
+        forg 0b97fh-LdAddress
+        org 0b97fh              ;Put color b as background in marquee
+	ld	de,3000h
+        call    PutSplitPage    ;3 bytes
+        ld      b,0bh
+        call    CleanVRAM
+        call    RestorePage
+        nop
+        nop
+
+
+
 
 	forg 0b602h-LdAddress
 	org 0b602h
@@ -890,13 +917,12 @@ sc4:
         ld      a,128+0
         out     (c),a
 
-	;; ld      a,(Rg1Sav)	; Disable vertical retrace interrupt
-        ;; res     5,a
-        ;; ld      (Rg1Sav),a
-        ;; out     (c),a
-        ;; ld      a,128+1
-        ;; out     (c),a
-	ret
+;;; Aqui hay sitio para parches: 06-2010
+
+        ret
+
+
+
 
 
 
@@ -1003,7 +1029,7 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
 	jr	nz,.559		;[0B5A4h]
 
 	ld	de,0
-	ld	b,0
+	ld	b,e
         call    CleanVRAM         ;[0B5D9h]      ;Limpio la tabla de definicion
                                                 ;de patrones
         ld      de,2000h                        ;La tabla de definicion de
@@ -1032,7 +1058,15 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
         ld      a,(0F3E0h)      ;Esto no es correcto!!!!!
 	ld	b,a
 	ld	a,1
-        jp      WriteVDP_Reg    ;[0B4A9h]
+        call    WriteVDP_Reg    ;[0B4A9h]
+
+        call    PutSplitPage
+        ld      de,1000h
+        ld      b,e
+        call    CleanVRAM
+        jp      RestorePage
+
+
 
 
 
@@ -1070,6 +1104,8 @@ valspr:		equ 6300h
 wizspr:		equ 6600h
 elfspr:		equ 6900h
 PutSlotRam:	equ 95CDh
+
+
 
 PutSplitPage:
         ld      a,4
