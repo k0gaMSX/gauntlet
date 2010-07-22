@@ -543,6 +543,20 @@ vrampage:	db	0
 
 
 
+PutColorTextPerP:
+        call    PutSplitPage
+        ld      a,ixl           ;Mira con que personaje se ha llamado
+        and     20h             ;en funcion de la parte baja de la direccion
+        ld      de,3400h        ;por lo que si se crea un nuevo fuente
+        jr      nz,.572         ;[0B6AAh] hay que modificar esto
+        ld      de,3488h
+.572:   call    PutColorLetter           ;[0B6B0h]
+        call    PutColorLetter           ;[0B6B0h]
+        call    PutColorLetter
+        jp    RestorePage
+
+
+
 
 ENASLT_0:
 	di
@@ -730,6 +744,9 @@ GetNamePJ:
         nop
 
 
+        forg 0B69Eh-LdAddress
+        org 0B69Eh
+        jp  PutColorTextPerP    ;Put character colour in split table
 
 
 	forg 0b602h-LdAddress
