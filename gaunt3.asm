@@ -215,6 +215,25 @@ InitPatScr:
 
 
 
+        forg 980Ch-LdAddress    ;Patch to allow introduction screen
+        org 980Ch
+
+CheckStatusPJ:
+        ld      a,(ix+14h)
+        and     80h
+	ld	(ix+14h),a
+
+        ld      a,ixl
+        and     20h                     ;Compruebo el personaje
+        exx                             ;con el que estoy a partir de la
+                                        ;direccion. (CAMBIAR ESTO!!!!!)
+	ld	de,1400h
+        jp      nz,InitPJP         ;[0B602h]
+	ld	de,1488h
+        jp      InitPJP            ;[0B602h]
+
+
+
 	forg 0b546h-LdAddress
 	org  0b546h
 	jp InitPatScr
@@ -528,6 +547,13 @@ SetColorTable:
         ret
 
 
+
+InitPJP:
+        call    PutSplitPage
+        call    InitPJ
+        jp      RestorePage
+
+
 RestorePage:
 	ld	a,(vrampage)
 SetPage:
@@ -768,10 +794,35 @@ InitPJ:
 
 	ld	c,5bh
         call    PutColorTextPer ;[0B69Eh]
-	ld	c,08bh
+	ld	c,8bh
         jp      PutColorLetter  ;[0B6B0h]
 
-.562:
+
+.562:	call	SB8AB		;[0B8ABh]
+        call    CleanLineText   ;[0B6C1h]    ASi en realidad elimino
+        exx                                 ;el cartel de PRESS FIRE
+        pop     de                          ;ya que redefino esos patrones.
+        exx
+        call    GetNamePJ2           ;[0B8C1h]
+	ld	a,(hl)
+	xor	0Fh
+	inc	a
+	srl	a
+	exx
+	add	a,a
+	add	a,a
+	add	a,a
+	add	a,e
+	ld	e,a
+	exx
+
+	ld	b,(hl)
+.564:	inc	hl
+	ld	a,(hl)
+        call    WritePatternText           ;[0B6EBh]
+	djnz	.564		;[0B632h]
+        call    PutColorPJ           ;[0B69Bh]
+
 
 
 	forg 0b79fh-LdAddress
