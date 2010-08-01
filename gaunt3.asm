@@ -506,9 +506,7 @@ VecIntP:
 
 PrintDigitMarquee:
         di
-        push af
         call PutSplitPage
-        pop  af
         call PrintDigit
         call RestorePage
         ei
@@ -769,10 +767,24 @@ GetNamePJ:
         nop
         nop
 
-
+EraseMarc:              equ     0B7E7h
+WritePatternText:       equ     0B6EBh
         forg 0B69Eh-LdAddress
         org 0B69Eh
         jp  PutColorTextPerP    ;Put character colour in split table
+EraseMarcP:
+        call    PutSplitPage
+        call    EraseMarc
+        ld      a,c
+        jp      WritePatternText
+
+
+
+        forg 0B7B0h-LdAddress
+        org 0B7B0h
+        jp      EraseMarcP
+        ld      a,c
+        jp      RestorePage
 
 
 	forg 0b602h-LdAddress
@@ -797,32 +809,7 @@ InitPJ:
 	ld	c,8bh
         jp      PutColorLetter  ;[0B6B0h]
 
-
-.562:	call	SB8AB		;[0B8ABh]
-        call    CleanLineText   ;[0B6C1h]    ASi en realidad elimino
-        exx                                 ;el cartel de PRESS FIRE
-        pop     de                          ;ya que redefino esos patrones.
-        exx
-        call    GetNamePJ2           ;[0B8C1h]
-	ld	a,(hl)
-	xor	0Fh
-	inc	a
-	srl	a
-	exx
-	add	a,a
-	add	a,a
-	add	a,a
-	add	a,e
-	ld	e,a
-	exx
-
-	ld	b,(hl)
-.564:	inc	hl
-	ld	a,(hl)
-        call    WritePatternText           ;[0B6EBh]
-	djnz	.564		;[0B632h]
-        call    PutColorPJ           ;[0B69Bh]
-
+.562:
 
 
 	forg 0b79fh-LdAddress
@@ -1176,8 +1163,11 @@ PutSlotRam:	equ 95CDh
 
 
 PutSplitPage:
+        push    af
         ld      a,4
-        jp      SetPage_1
+        call    SetPage_1
+        pop     af
+        ret
 
 
 ViewSplitPage:
