@@ -2,7 +2,7 @@ SRC=gauntlet.asm gaunt1.asm page1.asm page234.asm page567.asm tnilogo.rle
 TCF=select.tcf gtitle.tcf gaunt2.tcf gaunt3.tcf
 BIN=tnilogo.rle
 SPR=elf1.spr elf2.spr war1.spr war2.spr val1.spr val2.spr wiz1.spr wiz2.spr hand.spr
-TCPACK = wine ~/msx/pctool/tcpack
+TCPACK = tcpack
 
 
 
