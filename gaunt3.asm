@@ -435,14 +435,24 @@ VecIntP:
         rlca
         jp      c,.vhInt
 
-        call    ViewSplitPage
-        call    SetSplitColorTable
-
 	ld	a,1             ;line interrupt
 	out	(99h),a
 	ld	a,128+15
 	out	(99h),a
 	in	a,(99h)
+
+	ld	a,2
+	out	(99h),a
+	ld	a,128+15
+	out	(99h),a
+
+.waithr:
+	in	a,(99h)
+	and	20h
+	jp	nz,.waithr
+
+        call    SetSplitColorTable
+        call    ViewSplitPage
 
 	xor	a
 	out	(99h),a
@@ -761,7 +771,7 @@ GetNamePJ:
         org 0b97fh              ;Put color b as background in marquee
 	ld	de,3000h
         call    PutSplitPage    ;3 bytes
-        ld      b,0bh
+        ld      b,0bbh
         call    CleanVRAM
         call    RestorePage
         nop
@@ -960,7 +970,7 @@ sc4:
         ld      hl,VectorInt
 	ld	(0fd9bh),hl
 
-	ld	a,150		; Put interrupt line
+	ld	a,149		; Put interrupt line
         out     (c),a
         ld      a,128+19
         out     (c),a
@@ -1113,13 +1123,9 @@ InitScrP:			; Reubicada entera, hay espacio en la posicion
         ld      a,(0F3E0h)      ;Esto no es correcto!!!!!
 	ld	b,a
 	ld	a,1
-        call    WriteVDP_Reg    ;[0B4A9h]
+        jp      WriteVDP_Reg    ;[0B4A9h]
 
-        call    PutSplitPage
-        ld      de,1000h
-        ld      b,e
-        call    CleanVRAM
-        jp      RestorePage
+        ;; Hay algunos bytes libres aqui 6-7-2011
 
 
 
