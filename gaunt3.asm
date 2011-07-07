@@ -203,9 +203,19 @@ InitPatScr:
 
 .pointer:	dw	0
 
+SB63C:
+        bit     0,e
+        call    nz,0AA6Eh         ;[0AA6Eh]
+        call PutSplitPage
+        call 0B641h
+        jp RestorePage
+
 
 	;; AQUI HAY ALGO DE SITIO LIBRE!!!!!! <- 28-02-2010
 
+	forg 0b63ch-LdAddress
+	org 0b63ch
+        jp      SB63c
 
 	forg 8545h-LdAddress
 	org 8545h
