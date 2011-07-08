@@ -270,6 +270,13 @@ SB693:
 SB693_p:
         jp      SB693
 
+        forg    0B79Ch-LdAddress
+        org     0B79Fh
+        ld      b,0Abh
+
+        forg    0B7C6h-LdAddress
+        org     0B7C6h
+        ld      b,7bh
 
 
 	forg 0b63ch-LdAddress
