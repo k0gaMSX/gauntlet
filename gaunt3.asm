@@ -48,11 +48,6 @@ RowKeyb:	equ     847Fh
         jp      0b90fh           ; evito rutina de slot
 
 
-
-	forg	0b38ah-LdAddress
-	ret			;avoid tape message
-
-
 	forg 0956ch-LdAddress
 	call	PutBios		; Put Bios and Rom slot
 
@@ -206,12 +201,76 @@ InitPatScr:
 SB63C:
         bit     0,e
         call    nz,0AA6Eh         ;[0AA6Eh]
-        call PutSplitPage
-        call 0B641h
-        jp RestorePage
+        call    PutSplitPage
+        call    0B63ch + 3
+        jp      RestorePage
+
+SB693:
+        or      a
+        jr      nz,.1
+        ld      a,0bbh
+.1:     ld      b,8
+.571:   out     (98h),a         ;VRAM access
+        inc     e
+        djnz    .571            ;[0B695h]
+        ret
 
 
-	;; AQUI HAY ALGO DE SITIO LIBRE!!!!!! <- 28-02-2010
+
+
+ 	;; AQUI HAY ALGO DE SITIO LIBRE!!!!!! <- 28-02-2010
+        ;; Hay sitio libre en 0B40Bh <- 5-7-2011
+        ;; SB63C-> Esta rutina esta relacionada con cosas que se escriben en VRAM
+        ;;         Creo que es la que activa/desactiva items
+
+ 	forg 0b63ch-LdAddress
+ 	org 0b63ch
+         jp      SB63c
+        ld      a,ixl
+        and     20h             ;' '
+        ld      de,3400h
+        jr      nz,.565         ;[0B64Dh]
+        ld      de,3488h
+.565:   call    WritePTR_VRAMI           ;[0B43Fh]
+        ld      c,(ix14h)
+        sub     a
+        rr      c
+        jr      nc,.566         ;[0B65Ah]
+        ld      a,0ABh          ;''
+.566:   call    SB693           ;[0B693h]
+        sub     a
+        rr      c
+        jr      nc,.567         ;[0B664h]
+        ld      a,0DBh          ;''
+.567:   call    SB693           ;[0B693h]
+        sub     a
+        rr      c
+        jr      nc,.568         ;[0B66Eh]
+        ld      a,2bh           ;' '
+.568:   call    SB693           ;[0B693h]
+        ld      a,e
+        add     a,48h           ;'H'
+        ld      e,a
+        call    WritePTR_VRAMI           ;[0B43Fh]
+        sub     a
+        rr      c
+        jr      nc,.569         ;[0B67Fh]
+        ld      a,8Bh           ;'
+.569:   call    SB693           ;[0B693h]
+        sub     a
+        rr      c
+        jr      nc,.570         ;[0B689h]
+        ld      a,0EBh          ;''
+.570:   call    SB693           ;[0B693h]
+        sub     a
+        rr      c
+        jr      nc,SB693_p        ;[0B693h]
+        ld      a,7bh           ;'p'
+
+SB693_p:
+        jp      SB693
+
+
 
 	forg 0b63ch-LdAddress
 	org 0b63ch
@@ -763,9 +822,8 @@ GetNamePJ:
 
 
 	forg 0b373h-LdAddress
-	org 0b373h
-	ld b,09bh
-
+        ret
+        ;; Aqui hay sitio para parches. 8-7-2011
 
 	forg 0b5b6h-LdAddress
 	org 0b5b6h
