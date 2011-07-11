@@ -52,8 +52,10 @@ RowKeyb:	equ     847Fh
 	call	PutBios		; Put Bios and Rom slot
 
 	forg 09578h-LdAddress
+        call    DisableSCR
 	call	4014h		; Patch to read mazes from ROM
         call    PutSlotRam      ;[95CDh]
+        call    EnableSCR
 	ei
         ld      iy,RowKeyb      ;[847Fh]
         jp      0D000h          ;Esta es la direccion de ejecucion del bloque
@@ -231,6 +233,13 @@ KillPJ:         equ 9606h
         call    RestorePage
         ei
         ret
+
+EnableSCR:
+        ld      a,(0F3E0h)
+        ld      b,a
+        ld      a,1
+        jp    WriteVDP_Reg    ;[0B4A9h]
+
 
 
         ;; SB63C-> Esta rutina esta relacionada con cosas que se escriben en VRAM
@@ -1651,7 +1660,6 @@ LdirPat:
         ld      c,8
         ldir
 	jp	LdirPat2
-
 
 
 
