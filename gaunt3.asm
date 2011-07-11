@@ -215,11 +215,24 @@ SB693:
         djnz    .571            ;[0B695h]
         ret
 
+        forg    97c9h-LdAddress
+        org     097c9h
+        jp      nz,0B40Bh
 
-
-
- 	;; AQUI HAY ALGO DE SITIO LIBRE!!!!!! <- 28-02-2010
         ;; Hay sitio libre en 0B40Bh <- 5-7-2011
+
+        forg   0B40Bh-LdAddress
+        org    0B40Bh
+
+KillPJ:         equ 9606h
+        di
+        call    PutSplitPage
+        call    KillPJ
+        call    RestorePage
+        ei
+        ret
+
+
         ;; SB63C-> Esta rutina esta relacionada con cosas que se escriben en VRAM
         ;;         Creo que es la que activa/desactiva items
 
