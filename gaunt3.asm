@@ -276,7 +276,7 @@ SB693_p:
 
         forg    0B7C6h-LdAddress
         org     0B7C6h
-        ld      b,7bh
+        ld      b,0cbh
 
 
 	forg 0b63ch-LdAddress
@@ -899,7 +899,7 @@ InitPJ:
 
 	forg 0b79fh-LdAddress
 	org 0b79fh
-	ld	b,0abh		; Rectificacion del color de marcador
+	ld	b,08bh		; Rectificacion del color de marcador
 
 
 
