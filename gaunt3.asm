@@ -225,7 +225,7 @@ SB693:
 
  	forg 0b63ch-LdAddress
  	org 0b63ch
-         jp      SB63c
+        jp      SB63c
         ld      a,ixl
         and     20h             ;' '
         ld      de,3400h
@@ -236,17 +236,17 @@ SB693:
         sub     a
         rr      c
         jr      nc,.566         ;[0B65Ah]
-        ld      a,0ABh          ;''
+        ld      a,07Bh          ;''
 .566:   call    SB693           ;[0B693h]
         sub     a
         rr      c
         jr      nc,.567         ;[0B664h]
-        ld      a,0DBh          ;''
+        ld      a,05Bh          ;''
 .567:   call    SB693           ;[0B693h]
         sub     a
         rr      c
         jr      nc,.568         ;[0B66Eh]
-        ld      a,2bh           ;' '
+        ld      a,4bh           ;' '
 .568:   call    SB693           ;[0B693h]
         ld      a,e
         add     a,48h           ;'H'
@@ -255,17 +255,17 @@ SB693:
         sub     a
         rr      c
         jr      nc,.569         ;[0B67Fh]
-        ld      a,8Bh           ;'
+        ld      a,2Bh           ;'
 .569:   call    SB693           ;[0B693h]
         sub     a
         rr      c
         jr      nc,.570         ;[0B689h]
-        ld      a,0EBh          ;''
+        ld      a,03Bh          ;''
 .570:   call    SB693           ;[0B693h]
         sub     a
         rr      c
         jr      nc,SB693_p        ;[0B693h]
-        ld      a,7bh           ;'p'
+        ld      a,cbh           ;'p'
 
 SB693_p:
         jp      SB693
