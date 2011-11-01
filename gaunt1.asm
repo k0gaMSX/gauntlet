@@ -26,11 +26,18 @@ ShowIntro:
         ld      bc,datae-datab
         ldir
 
+        xor 	a
+        call  	MCDRVC
+
         ld      a,14h
         call    InitVDP
 
+
         call    ColourSFX
         call    SelectChars
+
+	ld	a,11
+	call	MCDRVC
 
         call    RestVDP
         xor     a
@@ -899,20 +906,29 @@ PalletteSFX2:
 
 
 oldvector1:
-        ld      a,(TIME)
-        or      a
-        jp      z,.2
-        dec     a
-        ld      (TIME),a
+              ld	a,(TIME)
+              or	a
+              jp	z,.2
+              dec	a
+              ld	(TIME),a
 
 .2:
-
-        LD      HL,PAL_GM
-        CALL    PutPal
-
-        pop     af
-        ei
-        reti
+              push  	hl
+	      push  	de
+              push  	bc
+              push	ix
+              push      iy
+              ld	hl,PAL_GM
+              call	PutPal
+              call	MCDRV
+              pop      iy
+              pop	ix
+              pop  	bc
+	      pop  	de
+              pop  	hl
+              pop	af
+              ei
+              reti
 
 
 newvector:
@@ -936,6 +952,10 @@ ColourSFX:
         ld      hl,TitlePallette
         call    PutPal
         call    VIS_ON
+
+	ld	a,9
+	ld	hl,music
+	call	MCDRVC
 
         ld      a,LINEINT
         call    SETVDP_LI
@@ -1320,7 +1340,7 @@ ST_AMPL:
         ld      e,8Fh           ;'~O'
         call    LEE_JOY           ;[88DEh]
         ld      (JOYPORT1),a       ;[9439h]
-        ld      e,0CFh          ;'.bÅœ'
+        ld      e,0CFh
         call    LEE_JOY           ;[88DEh]
         ld      (JOYPORT2),a       ;[943AH]
 
@@ -1824,4 +1844,6 @@ JOYPORT2:       rb      1
 PALETAD1:       rw      1
 PALETAW1:       rb      32
 PAL_GM:         rb      32
+
+
 

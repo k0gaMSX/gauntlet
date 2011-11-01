@@ -16,7 +16,9 @@ gchars: equ $
 
 gtitle: equ $
         incbin  "gtitle.tcf",8
+music:  incbin "gauntlet.mcm"
 
+%include        "mcdrv.asm"
 
 section         code
 
@@ -26,4 +28,6 @@ p2endf:         equ $
 %if p2size > pagsize*3
    %warn "Page 234 boundary broken"
 %endif
+
+
 
