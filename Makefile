@@ -11,18 +11,18 @@ test:	gauntlet.rom
 
 
 gauntlet.rom:	$(SRC) $(TCF) $(BIN) maze.bin
-	tniasm.linux gauntlet.asm
+	tniasm gauntlet.asm
 
 gaunt3.tcf: gaunt3.asm gauntlet.3 deps
 	rm -f gaunt3.tmp
 	cp gauntlet.3 gaunt.bin
-	tniasm.linux gaunt3.asm
+	tniasm gaunt3.asm
 	dd if=gaunt.bin of=gaunt3.tmp bs=1 skip=7
 	$(TCPACK) gaunt3.tmp gaunt3.tcf
 
 gaunt2.tcf: gaunt2.asm gaunt.2 deps
 	cp gaunt.2 gaunt.bin
-	tniasm.linux gaunt2.asm
+	tniasm gaunt2.asm
 	dd if=gaunt.bin of=gaunt2.tmp bs=1 skip=7
 	$(TCPACK) gaunt2.tmp gaunt2.tcf
 

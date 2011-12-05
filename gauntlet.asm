@@ -5,7 +5,7 @@
 
 
 
-        fname   "gauntlet.rom"
+        %outfile   "gauntlet.rom"
 
 
 

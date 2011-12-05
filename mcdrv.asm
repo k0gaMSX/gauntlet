@@ -467,7 +467,7 @@ MCSearchFM:	in a,(0a8h)
 		ld hl,0
 		add hl,sp
 		dec hl
-		ld de,(MCEND-MCfindfm1)+20
+		ld de,20+(MCEND-MCfindfm1)
 		or a
 		sbc hl,de
 		push hl

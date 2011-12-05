@@ -10,12 +10,6 @@ section code
 
 InitialWait:	equ	27
 
-%macro ralign %n
-  %if $ & (#1-1)
-    %res8 #1 - ($ & (#1-1))
-  %endif
-%endmacro
-
 %macro VDP %n
         out     [99h],a
         ld      a,#1+128
@@ -29,7 +23,7 @@ InitialWait:	equ	27
         out     [99h],a
         ld      a,#1 & FFh
         out     [99h],a
-        ld      a,(#1 >> 8) & 3Fh + 64
+        ld      a,+(#1 >> 8) & 3Fh + 64
         out     [99h],a
 %endmacro
 

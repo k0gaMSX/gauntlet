@@ -35,7 +35,7 @@ RowKeyb:        equ     847Fh
 ;;; a todas las paginas (pociones, jamon y todo eso
 ;;; La funcion que hace el cambio de patrones es LdirPat
 
-        fname   "gaunt.bin",0
+        %outfile   "gaunt.bin",0
         forg    0
         db      0feh
         dw      8000h
@@ -254,7 +254,7 @@ EnableSCR:
         jr      nz,.565         ;[0B64Dh]
         ld      de,3488h
 .565:   call    WritePTR_VRAMI           ;[0B43Fh]
-        ld      c,(ix14h)
+        ld      c,(ix+14h)
         sub     a
         rr      c
         jr      nc,.566         ;[0B65Ah]

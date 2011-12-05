@@ -7,7 +7,7 @@ LdAddress:      equ     87d0h-7
 
 
 
-        fname   "gaunt.bin",0
+        %outfile   "gaunt.bin",0
 
         forg    9800h-LdAddress
         incbin  "set1.col"
