@@ -43,7 +43,7 @@ Init:
 
 %include "sys.asm"
 %include "gaunt1.asm"
-%include "tnilogo.asm"
+%include "aamsx.asm"
 
 section         code
 
