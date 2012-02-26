@@ -432,7 +432,6 @@ COPYVRAM:
         LD      C,9Bh
         LD      B,15
         OTIR
-        EI
         RET
 
 ;NOMBRE: TESTCOM
@@ -442,7 +441,9 @@ COPYVRAM:
 ;MODIFICA: AF,AF',C
 
 
-TESTCOM:        LD      C,99h
+TESTCOM:
+	      DI
+              LD    C,99h
         LD      A,2
         DI
         OUT     (C),A
@@ -454,7 +455,6 @@ TESTCOM:        LD      C,99h
         OUT     (C),A
         LD      A,128+15
         OUT     (C),A
-        EI
         EX      AF,AF'
         BIT     0,A
         RET
@@ -484,7 +484,6 @@ SPD_OFF:        DI
         OUT     (99h),A
         LD      A,88H
         OUT     (99h),A
-        EI
         RET
 
 
@@ -500,7 +499,6 @@ SPD_ON: DI
         OUT     (99h),A
         LD      A,128+8
         OUT     (99h),A
-        EI
         RET
 
 
@@ -645,7 +643,6 @@ COLOR0_OFF:     DI
         OUT     (99h),A
         LD      A,128+8
         OUT     (99h),A
-        EI
         RET
 
 
@@ -954,18 +951,18 @@ ColourSFX:
         ld      a,2
         call    VER_PAGE
         ld      hl,PAL_NEGRO
-        ld      hl,TitlePallette
         call    PutPal
-        call    VIS_ON
 
+        di
 	ld	a,9
 	ld	hl,music
 	call	MCDRVC
-
         ld      a,LINEINT
         call    SETVDP_LI
+        call    VIS_ON
         ld      hl,TitlePallette
         CALL    FADE_ON
+
         call    waitKB
         call    waitnKB
         CALL    RESVDP_LI
@@ -1122,7 +1119,6 @@ VIS_ON: DI
         OUT     (99h),A
         LD      A,128+1
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1135,7 +1131,6 @@ VIS_OFF:
         OUT     (99h),A
         LD      A,128+1
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1152,7 +1147,6 @@ SET_CFONDO:
         OUT     (99h),A
         LD      A,128+7
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1177,7 +1171,6 @@ PutPal: di
         ld      b,32
         ld      c,9Ah
         otir
-        ei
         ret
 
 Pallette:
@@ -1206,7 +1199,6 @@ VER_PAGE:
         OUT     (99h),A
         LD      A,128+2
         OUT     (99h),A
-        EI
         RET
 
 PAGE0:          DB 00011111B
@@ -1224,7 +1216,6 @@ SET_SPD16:      DI
         OUT     (99h),A
         LD      A,128+1
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1239,7 +1230,6 @@ SETVDP_LI:
         OUT     (99h),A
         LD      A,128+0
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1253,7 +1243,6 @@ RESVDP_LI:      DI
         OUT     (99h),A
         LD      A,128+0
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1323,7 +1312,6 @@ SetVram:
         OUT     (99h),A
         LD      A,128+14
         OUT     (99h),A
-        EI
         RET
 
 
@@ -1849,6 +1837,3 @@ JOYPORT2:       rb      1
 PALETAD1:       rw      1
 PALETAW1:       rb      32
 PAL_GM:         rb      32
-
-
-
