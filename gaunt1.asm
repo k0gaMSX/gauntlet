@@ -36,9 +36,6 @@ ShowIntro:
         call    ColourSFX
         call    SelectChars
 
-	ld	a,11
-	call	MCDRVC
-
         call    RestVDP
         xor     a
         call    initscr
@@ -74,6 +71,15 @@ SelectChars:
         dec     a
         call    nz,selectP2     ; and player 2 if it is necessary
         ld      (0fffeh),a
+	ld	a,4
+	call	MCDRVC
+        ld    	hl,SelectPallette
+	call	FADE_OFF
+	ld	b,160
+.loop:  ei
+	halt
+	djnz .loop
+
         ret
 
 
