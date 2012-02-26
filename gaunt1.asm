@@ -66,8 +66,10 @@ SelectChars:
         call    getNumbers      ; Select number of players
         call    selectP1        ; Select player 1
         ld      (0fffdh),a
+	ld      b,a
         ld      a,(nplayers)
         dec     a
+	ld      a,b
         call    nz,selectP2     ; and player 2 if it is necessary
         ld      (0fffeh),a
 	ld	a,4
