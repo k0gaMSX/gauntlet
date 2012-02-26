@@ -30,8 +30,11 @@ Init:
         call    SaveSlotC
         call    searchramnormal
         call    SetIntroPages
+.intro:
         call    StartLogo
         call    ShowIntro
+	or      a
+	jr      z,.intro
 
         call    SetBloadPages
         call    LoadFirstBload
@@ -53,13 +56,3 @@ p1endf:         equ $
 %if p1size > pagsize
    %warn "Page 0 boundary broken"
 %endif
-
-
-
-
-
-
-
-
-
-

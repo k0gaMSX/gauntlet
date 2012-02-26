@@ -1,5 +1,12 @@
 section code
 
+
+MSXPalet:
+	db 00h,0,00h,0,11h,6,33h,7,17h,1,27h,3,51h,1,27h,6
+	db 71h,1,73h,3,61h,6,64h,6,11h,4,65h,2,55h,5,77h,7
+
+
+
 StartLogo:
                     xor		a
                     ld		(CLIKSW),a
@@ -9,8 +16,14 @@ StartLogo:
                     ld		(BAKCLR),a
                     ld		(BDRCLR),a
 
-                    ld		a,2
-                    call	CHGMOD
+		    call	VIS_OFF
+		    xor         a
+                    call        VER_PAGE
+		    ld 		hl, MSXPalet
+		    call        PutPal
+	
+	            ld          a,2
+		    call	CHGMOD
 
                     ; Logo!!
                     ld		hl,AAMSX_PAT+8

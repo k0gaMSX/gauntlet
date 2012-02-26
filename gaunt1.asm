@@ -31,13 +31,13 @@ ShowIntro:
         ld      a,14h
         call    InitVDP
 
-
         call    ColourSFX
-        call    SelectChars
+        push    af
+        or      a
+        call    nz,SelectChars
 
         call    RestVDP
-        xor     a
-        call    initscr
+        pop     af
         ret
 
 
@@ -636,7 +636,14 @@ YINICIAL:       equ     96
 
 
 
-
+COLOR0_ON:     DI
+        LD      A,(RG8SAV)
+        RES     5,A
+        LD      (RG8SAV),A
+        OUT     (99h),A
+        LD      A,128+8
+        OUT     (99h),A
+        RET
 
 COLOR0_OFF:     DI
         LD      A,(RG8SAV)
@@ -971,14 +978,28 @@ ColourSFX:
         LD      HL,TitlePallette
         call    FADE_OFF
 
-
+	ld      hl,(WAITTIME)
+        ld      a,l
+	or      h
         ret
 
 
 
-
 waitKB:
+        ld    hl,60*60
+        ld    (WAITTIME),hl
 .loop:
+	ld      hl,(WAITTIME)
+	dec     hl
+        ld      (WAITTIME),hl
+        ld      a,l
+	or      h
+        jr      nz,.wait
+        xor     a
+	ret
+.wait:
+	ei
+        halt
         call    ST_AMPL
         ld      a,(JOYPORT1)
         ld      b,a
@@ -989,6 +1010,10 @@ waitKB:
 
 
 waitnKB:
+	ld    hl,(WAITTIME)
+	ld    a,h
+        or    l
+        ret   z
 .loop:
         call    ST_AMPL
         ld      a,(JOYPORT1)
@@ -1019,11 +1044,6 @@ RestVDP:
         di
         ldir
         ei
-
-        ld      hl,PAL_NEGRO
-        call    PutPal
-        call    RESVDP_LI
-        call    VIS_OFF
         ret
 
 
@@ -1034,7 +1054,7 @@ RestVDP:
 
 InitVDP:
         ld      a,5
-        call    initscr
+        call    CHGMOD
         call    SET_SPD16
         call    COLOR0_OFF
         xor     a
@@ -1315,17 +1335,6 @@ SetVram:
         LD      A,128+14
         OUT     (99h),A
         RET
-
-
-
-
-InitScr:
-;;; ld  iy,(EXBRSA-1)
-;;; ld  ix,CHGMOD
-;;; call        CALSLT
-        call    05fh
-        ret
-
 
 
 
@@ -1828,7 +1837,7 @@ counter:        rb      1
 TIME:           rb      1
 OffsetX:        rb      1
 OffsetY:        rb      1
-
+WAITTIME:       rb      1
 
 bufmatch_v:     rb      1
 hmod:           rb      1
