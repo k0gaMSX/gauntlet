@@ -222,9 +222,6 @@ ReadPSG:				; ...
 
 WriteFM:	push bc
 		ld c,a
-		ld a,(Tmsx)
-		or a
-		jr z,WriteFMt
 		ld a,b
 		out (7ch),a
 		ld a,c
@@ -232,52 +229,6 @@ WriteFM:	push bc
 		pop bc
 		ret
 
-
-WriteFMt:	ld a,c
-		push	af
-		ld	a, (Tlast_FM)
-		ld	c, a
-
-WriteFM1:				; ...
-		in	a, (0E6h)
-		sub	c
-		cp	6
-		jr	c, WriteFM1
-		ld	a, b
-		out	(7Ch), a
-		in	a, (0E6h)
-		ld	c, a
-
-WriteFM2:				; ...
-		in	a, (0E6h)
-		sub	c
-		cp	1
-		jr	c, WriteFM2
-		in	a, (0E6h)
-		ld	(Tlast_FM), a
-		pop	af
-		out	(7Dh), a
-		pop	bc
-		ret
-
-;****************************************************************************
-;Old routine?
-
-;;;		push	bc
-;;;		ld	b, a
-;;;		ld	a, (Tlast_FM)
-;;;		ld	c, a
-
-;loc_0_8102:				;
-;;;		in	a, (0E6h)
-;;;		sub	c
-;;;		cp	b
-;;;		jr	c, loc_0_8102
-;;;		in	a, (0E6h)
-;;;		ld	(Tlast_FM), a
-;;;		pop	bc
-;;;		ret
-;****************************************************************************
 
 ;****************************************************************************
 
@@ -419,7 +370,6 @@ QuitSong:				; ...
 inichips:
 
 		call    MCSearchFM
-		call    MCTestTR
 
 		ld	c, 9
 		ld	b, 30h
@@ -433,22 +383,6 @@ inichip1:				; ...
 		jp	initPSG
 
 ;***************************************************************************
-
-
-MCTestTR:	ld a,(0fcc1h)
-		ld hl,2dh
-		call 0ch
-		cp 3
-		ld a,1
-		jr nz,MCTestTR1
-		xor a
-
-
-MCTestTR1:	ld (Tmsx),a
-		ret
-
-
-
 
 ;;; ****************************************************************
 ; Search and init FM
@@ -2353,6 +2287,5 @@ Table_effect: equ   REL_Table_effect - Start_REL + Start_RAM
 Table_fmins:  equ   REL_Table_fmins - Start_REL + Start_RAM
 Table_SFX:    equ   REL_Table_SFX - Start_REL + Start_RAM
 TableMinc:    equ   REL_TableMinc - Start_REL + Start_RAM
-Tmsx:         equ   REL_Tmsx - Start_REL + Start_RAM
 Tlast_FM:     equ   REL_Tlast_FM - Start_REL + Start_RAM
 section code
