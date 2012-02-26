@@ -278,8 +278,7 @@ WriteFM2:				; ...
 ;;;		pop	bc
 ;;;		ret
 ;****************************************************************************
-Tlast_FM:	db 50h			; ...
-					; Time of last FM access
+
 ;****************************************************************************
 
 inivars:				; ...
@@ -449,7 +448,6 @@ MCTestTR1:	ld (Tmsx),a
 		ret
 
 
-Tmsx:		db 0
 
 
 ;;; ****************************************************************
@@ -2049,6 +2047,8 @@ ptable_fmins:	dw Table_fmins		; ...
 
 Start_REL:  equ   $
 
+REL_Tlast_FM:	db 50h		; Time of last FM access
+REL_Tmsx:		db 0
 
 REL_ChannelOFF:     db    0		    ; ...
 REL_TimeLastChn:	db 0			; ...
@@ -2353,7 +2353,6 @@ Table_effect: equ   REL_Table_effect - Start_REL + Start_RAM
 Table_fmins:  equ   REL_Table_fmins - Start_REL + Start_RAM
 Table_SFX:    equ   REL_Table_SFX - Start_REL + Start_RAM
 TableMinc:    equ   REL_TableMinc - Start_REL + Start_RAM
-
+Tmsx:         equ   REL_Tmsx - Start_REL + Start_RAM
+Tlast_FM:     equ   REL_Tlast_FM - Start_REL + Start_RAM
 section code
-
-
