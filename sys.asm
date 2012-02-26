@@ -760,6 +760,7 @@ i:      call    UnTCFV
 
 
 LoadSecondBload:
+	call 	PutSafeInt
         ld      hl,gaunt.3
         xor     a
         ld      de,4000h
@@ -778,7 +779,34 @@ LoadSecondBload:
         jp      8000h
 
 
+PutSafeInt:
+	di
+	ld	b,.code_end - .code
+	ld	de,$38
+	ld	hl,.code
+.loop:
+	push	bc
+	push	de
+	push	hl
+	ld	l,(hl)
+	ex	de,hl
+	ld	a,(rampage0)
+	call	WRSLT
+	pop	hl
+	pop	de
+	pop	bc
+	inc	de
+	inc	hl
+	djnz	.loop
+	ret
 
+.code:
+	push	af
+	in	a,(099h)
+	pop	af
+	ei
+	ret
+.code_end:
 
 ;;; Name:       SaveSlotC
 ;;; Function:   Save Slot in which cartridge is inserted
