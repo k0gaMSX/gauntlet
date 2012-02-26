@@ -1,5 +1,5 @@
 section code
-	
+
 StartLogo:
                     xor		a
                     ld		(CLIKSW),a
@@ -11,7 +11,7 @@ StartLogo:
 
                     ld		a,2
                     call	CHGMOD
-	
+
                     ; Logo!!
                     ld		hl,AAMSX_PAT+8
                     ld		de,0c000h
@@ -28,13 +28,20 @@ StartLogo:
 		    ld 		de,02000h
 		    ld		bc,3*0800h
 		    call	LDIRVM
-	
-                    ld		b,120
-.loop:
+
+                    ld		bc,260
+.loop:		    push	bc
+		    ld 		a,8
+                    call	SNSMAT
+                    pop        	bc
+		    and 	1
+		    ret		z
                     ei
                     halt
-		    djnz .loop
-
+		    dec		bc
+		    ld		a,c
+		    or		b
+                    jr 		nz,.loop
 
                     ret
 
@@ -43,4 +50,3 @@ AAMSX_COL:
                     incbin "AAMSX.COL"
 AAMSX_PAT:
                     incbin "AAMSX.PAT"
-
