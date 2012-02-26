@@ -26,9 +26,8 @@ ShowIntro:
         ld      bc,datae-datab
         ldir
 
-        xor 	a
-        call  	MCDRVC
-
+	ld      a,3
+	call    MCDRVC
         ld      a,14h
         call    InitVDP
 
