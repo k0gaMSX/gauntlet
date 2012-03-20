@@ -1619,14 +1619,7 @@ RefreshScrD:    db 0
         nop
         nop
 
-
-        forg    9f3dh-LdAddress ;Parche para que haya pocion en todas las pantallas > 8
-        org     9f3dh
-        nop
-        nop
-
-
-
+  
         forg    958Eh-LdAddress
         org     958Eh
 
