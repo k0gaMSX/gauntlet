@@ -1169,6 +1169,10 @@ CleanVRAM:      equ 0b5d9h
 HideSprites:    equ 094c4h
 
 InitScrP:                       ; Reubicada entera, hay espacio en la posicion
+	ei
+	halt
+	di
+        call    DisableSCR
         ld      a,3             ; original
         di
         out     (99h),a
@@ -1176,7 +1180,7 @@ InitScrP:                       ; Reubicada entera, hay espacio en la posicion
         out     (99h),a
         xor     a
         ld      (PaginaV),a
-        call    DisableSCR
+
 
         ld      de,1800h
         call    WritePTR_VRAMI           ;[0B43Fh]
@@ -1211,12 +1215,10 @@ InitScrP:                       ; Reubicada entera, hay espacio en la posicion
         ld      de,1e00h
         call    WritePTR_VRAMI  ;[0B43Fh]
 
-        di
         ld      a,1
         out     (099h),a
         ld      a,128+14
         out     (99h),a
-        ei
 
         ld      hl,SpriteAttrib ;Escribo las caracteristica de 20 sprites
         ld      b,80h
@@ -1227,7 +1229,9 @@ InitScrP:                       ; Reubicada entera, hay espacio en la posicion
         ld      a,(0F3E0h)      ;Esto no es correcto!!!!!
         ld      b,a
         ld      a,1
-        jp      WriteVDP_Reg    ;[0B4A9h]
+        call      WriteVDP_Reg    ;[0B4A9h]
+	ei
+	ret
 
         ;; Hay algunos bytes libres aqui 6-7-2011
 
