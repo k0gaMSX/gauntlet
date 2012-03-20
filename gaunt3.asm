@@ -42,6 +42,14 @@ RowKeyb:        equ     847Fh
         dw      0ca20h
         dw      8000h
 
+        forg    979fh-LdAddress
+        org     979fh
+	bit	7,(iy+07)
+
+        forg    97a9h-LdAddress
+        org     97a9h
+	bit	1,(iy+06)
+
 
         forg    83d0h-LdAddress
         org     83d0h
