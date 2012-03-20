@@ -1627,19 +1627,6 @@ RefreshScrD:    db 0
 
 
 
-        forg    0baa4h-LdAddress ;Nuevas rutinas para copiar los patrones especiales
-        org     0baa4h
-
-
-
-;;; Aqui se pueden meter rutinas pero para ello primero hay que asegurarse
-;;; de que nunca se llega aqui
-
-
-
-
-
-
         forg    958Eh-LdAddress
         org     958Eh
 
