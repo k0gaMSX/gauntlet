@@ -55,6 +55,31 @@ RowKeyb:        equ     847Fh
         org     83d0h
         jp      0b90fh           ; evito rutina de slot
 
+        forg    95DDh-LdAddress
+	org     95DDh
+
+MazeNumber:	equ 9602h
+SelectMaze:
+        cp      80h
+        ld      hl,3030h
+	jr	z,.4
+
+	call 	randscr
+.2:	cp	10
+	jr	c,.3
+	inc	l
+	sub	10
+	jr	.2
+
+.3:	add	a,h
+	ld 	h,a
+
+.4:	ld	(MazeNumber),hl
+	ret
+
+
+
+
 
         forg 0956ch-LdAddress
         call    PutBios         ; Put Bios and Rom slot
@@ -1234,6 +1259,18 @@ InitScrP:                       ; Reubicada entera, hay espacio en la posicion
 	ret
 
         ;; Hay algunos bytes libres aqui 6-7-2011
+
+randscr:
+	ld	a,r
+.1:	cp	30
+	jr	c,.2
+	sub	30
+	jr	.1
+
+.2:	or 	a
+	ret	nz
+	inc	a
+	ret
 
 
 
