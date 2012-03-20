@@ -315,10 +315,9 @@ SB693_p:
 
         forg 8545h-LdAddress
         org 8545h
-        nop                     ; Anular llamada a cambio de patron
-        nop                     ; porque ya se actualiza en la interrupcion
-        nop                     ;
-
+	ei		        ; Anular llamada a cambio de patron
+	halt                    ; porque ya se actualiza en la interrupcion
+	halt
 
 
         forg 980Ch-LdAddress    ;Patch to allow introduction screen
