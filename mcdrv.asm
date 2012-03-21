@@ -390,7 +390,10 @@ inichip1:				; ...
 
 
 
-MCSearchFM:	in a,(0a8h)
+MCSearchFM:
+		ld	a,1
+		ld	(FMfound),a
+	        in a,(0a8h)
 		push af
 		ld a,(0ffffh)
 		cpl
@@ -443,6 +446,8 @@ MCFMt		jr	z,MCFMFnd
 		and	03h
 		pop	bc
 		djnz	MCFMLP2
+		xor	a
+		ld	(FMfound),a
 
 
 MCRecover:	pop af

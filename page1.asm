@@ -29,6 +29,7 @@ Init:
 
         call    SaveSlotC
         call    searchramnormal
+	call 	InitBasePorts
         call    SetIntroPages
 .intro:
         call    StartLogo
@@ -48,6 +49,10 @@ Init:
 %include "gaunt1.asm"
 %include "aamsx.asm"
 
+musicpt3:	
+	incbin "gauntlet.pt3"
+	
+	
 section         code
 
 p1end:  ds      p1padd,0

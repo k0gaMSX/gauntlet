@@ -20,14 +20,14 @@ section code
 ShowIntro:
         ld      a,1fh
         out     (2eh),a
+	xor	a
+	ld	(playingsong),a
 
         ld      hl,datab
         ld      de,databss
         ld      bc,datae-datab
         ldir
 
-	ld      a,3
-	call    MCDRVC
         ld      a,14h
         call    InitVDP
 
@@ -72,8 +72,7 @@ SelectChars:
 	ld      a,b
         call    nz,selectP2     ; and player 2 if it is necessary
         ld      (0fffeh),a
-	ld	a,4
-	call	MCDRVC
+	call	stopsong
         ld    	hl,SelectPallette
 	call	FADE_OFF
 	ld	b,160
@@ -931,7 +930,7 @@ oldvector1:
               push      iy
               ld	hl,PAL_GM
               call	PutPal
-              call	MCDRV
+	      call	isrsound
               pop      iy
               pop	ix
               pop  	bc
@@ -963,12 +962,10 @@ ColourSFX:
         call    PutPal
 
         di
-	ld	a,9
-	ld	hl,music
-	call	MCDRVC
         ld      a,LINEINT
         call    SETVDP_LI
         call    VIS_ON
+	call	initmusic
         ld      hl,TitlePallette
         CALL    FADE_ON
 

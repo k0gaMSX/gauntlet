@@ -891,6 +891,19 @@ SlotChg:
         jp      ENASLT
 
 
+InitBasePorts:
+        ld      de,BASEPORT.PSG
+        ld      hl,(WRTPSG+1)
+        call    .scan
+
+        ld      de,BASEPORT.PPI
+        ld      hl,(WSLREG+1)
+
+.scan:  ld      a,$d3
+        ld      bc,16
+        cpir
+        ldi
+        ret
 
 
 romslt:         equ 0f37fh
@@ -903,4 +916,9 @@ pageldir:       equ 0f37ah
 
 section rdata
 oldISR:         rb      5
-
+FMfound:	rb	1
+BASEPORT:
+.PSG:           rb      1
+.PPI:           rb      1
+playingsong: 	rb	1
+	

@@ -16,11 +16,66 @@ gchars: equ $
 
 gtitle: equ $
         incbin  "gtitle.tcf",8
-music:  incbin "gauntlet.mcm"
-
+music:
+	incbin "gauntlet.mcm"
+	
 %include        "mcdrv.asm"
+%include	"pt3.asm"	
 
 section         code
+isrsound:
+	ld	a,(playingsong)
+	or 	a
+	ret	z
+	ld 	a,(FMfound)
+	or	a
+	jr	z,.psg
+        jp	MCDRV
+
+.psg:
+        call     PT3_ROUT
+	jp    	PT3_PLAY
+
+	
+	
+stopsong:
+	ld 	a,(FMfound)
+	or	a
+	jr	z,.psg
+	ld	a,4
+	jp	MCDRVC
+
+.psg:	jp	PT3_MUTE
+	
+	
+initmusic:
+	call	MCSearchFM
+	ld 	a,(FMfound)
+	or	a
+	jr	z,.psg
+	ld	a,3
+	call	MCDRVC
+	ld	a,9
+	ld	hl,music
+	call	MCDRVC
+	jr	.var
+	
+.psg:
+        ld 	IY,AYREGS
+        ld 	[IY+7],$BF
+        ld 	[IY+8],0
+        ld 	[IY+8],0
+        ld 	[IY+9],0
+        ld 	[IY+10],0
+        call     PT3_ROUT	
+        ld      hl,PT3_SETUP
+        set     0,(hl)
+        ld      hl,musicpt3
+	call 	PT3_INIT
+
+.var:	ld	a,1
+	ld	(playingsong),a
+	ret
 
 p2end:          ds      p2padd,0
 p2endf:         equ $
