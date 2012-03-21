@@ -49,6 +49,10 @@ stopsong:
 	
 	
 initmusic:
+	ld 	a,4
+	call 	SNSMAT
+	bit	5,a
+	jr	z,.psg
 	call	MCSearchFM
 	ld 	a,(FMfound)
 	or	a
@@ -60,7 +64,8 @@ initmusic:
 	call	MCDRVC
 	jr	.var
 	
-.psg:
+.psg:	xor	a
+	ld	(FMfound),a
         ld 	IY,AYREGS
         ld 	[IY+7],$BF
         ld 	[IY+8],0
