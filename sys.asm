@@ -104,8 +104,6 @@ LoadMazeR:
         add     hl,de
 
         ld      a,(hl)
-        ld      e,5
-        add     a,e
 
         inc     hl
         ld      e,(hl)
@@ -125,142 +123,128 @@ LoadMazeR:
 
 .MazeFiles:
         db      "MAZE00"
-        db      maze00>>16
-        dw      maze00&0ffffh
+        db      maze00>>13 + 5
+        dw      maze00&01fffh | 6000h
 
         db      "MAZE01"
-        db      maze01>>16
-        dw      maze01&0ffffh
+        db      maze01>>13 + 5
+        dw      maze01&01fffh | 6000h
 
         db      "MAZE02"
-        db      maze02>>16
-        dw      maze02&0ffffh
-
+        db      maze02>>13 + 5
+        dw      maze02&01fffh | 6000h
 
         db      "MAZE03"
-        db      maze03>>16
-        dw      maze03&0ffffh
+        db      maze03>>13 + 5
+        dw      maze03&01fffh | 6000h
 
         db      "MAZE04"
-        db      maze04>>16
-        dw      maze04&0ffffh
-
+        db      maze04>>13 + 5
+        dw      maze04&01fffh | 6000h
 
         db      "MAZE05"
-        db      maze05>>16
-        dw      maze05&0ffffh
+        db      maze05>>13 + 5
+        dw      maze05&01fffh | 6000h
 
         db      "MAZE06"
-        db      maze06>>16
-        dw      maze06&0ffffh
+        db      maze06>>13 + 5
+        dw      maze06&01fffh | 6000h
 
         db      "MAZE07"
-        db      maze07>>16
-        dw      maze07&0ffffh
-
+        db      maze07>>13 + 5
+        dw      maze07&01fffh | 6000h
 
         db      "MAZE08"
-        db      maze08>>16
-        dw      maze08&0ffffh
-
+        db      maze08>>13 + 5
+        dw      maze08&01fffh | 6000h
 
         db      "MAZE09"
-        db      maze09>>16
-        dw      maze09&0ffffh
+        db      maze09>>13 + 5
+        dw      maze09&01fffh | 6000h
 
         db      "MAZE10"
-        db      maze10>>16
-        dw      maze10&0ffffh
-
+        db      maze10>>13 + 5
+        dw      maze10&01fffh | 6000h
 
         db      "MAZE11"
-        db      maze11>>16
-        dw      maze11&0ffffh
-
+        db      maze11>>13 + 5
+        dw      maze11&01fffh | 6000h
 
         db      "MAZE12"
-        db      maze12>>16
-        dw      maze12&0ffffh
-
+        db      maze12>>13 + 5
+        dw      maze12&01fffh | 6000h
 
         db      "MAZE13"
-        db      maze13>>16
-        dw      maze13&0ffffh
-
+        db      maze13>>13 + 5
+        dw      maze13&01fffh | 6000h
 
         db      "MAZE14"
-        db      maze14>>16
-        dw      maze14&0ffffh
+        db      maze14>>13 + 5
+        dw      maze14&01fffh | 6000h
 
         db      "MAZE15"
-        db      maze15>>16
-        dw      maze15&0ffffh
+        db      maze15>>13 + 5
+        dw      maze15&01fffh | 6000h
 
         db      "MAZE16"
-        db      maze16>>16
-        dw      maze16&0ffffh
+        db      maze16>>13 + 5
+        dw      maze16&01fffh | 6000h
 
         db      "MAZE17"
-        db      maze17>>16
-        dw      maze17&0ffffh
-
+        db      maze17>>13 + 5
+        dw      maze17&01fffh | 6000h
 
         db      "MAZE18"
-        db      maze18>>16
-        dw      maze18&0ffffh
-
+        db      maze18>>13 + 5
+        dw      maze18&01fffh | 6000h
 
         db      "MAZE19"
-        db      maze19>>16
-        dw      maze19&0ffffh
-
+        db      maze19>>13 + 5
+        dw      maze19&01fffh | 6000h
 
         db      "MAZE20"
-        db      maze20>>16
-        dw      maze20&0ffffh
-
+        db      maze20>>13 + 5
+        dw      maze20&01fffh | 6000h
 
         db      "MAZE21"
-        db      maze21>>16
-        dw      maze21&0ffffh
-
+        db      maze21>>13 + 5
+        dw      maze21&01fffh | 6000h
 
         db      "MAZE22"
-        db      maze22>>16
-        dw      maze22&0ffffh
-
+        db      maze22>>13 + 5
+        dw      maze22&01fffh | 6000h
 
         db      "MAZE23"
-        db      maze23>>16
-        dw      maze23&0ffffh
-
+        db      maze23>>13 + 5
+        dw      maze23&01fffh | 6000h
 
         db      "MAZE24"
-        db      maze24>>16
-        dw      maze24&0ffffh
+        db      maze24>>13 + 5
+        dw      maze24&01fffh | 6000h
 
         db      "MAZE25"
-        db      maze25>>16
-        dw      maze25&0ffffh
+        db      maze25>>13 + 5
+        dw      maze25&01fffh | 6000h
 
         db      "MAZE26"
-        db      maze26>>16
-        dw      maze26&0ffffh
+        db      maze26>>13 + 5
+        dw      maze26&01fffh | 6000h
 
         db      "MAZE27"
-        db      maze27>>16
-        dw      maze27&0ffffh
+        db      maze27>>13 + 5
+        dw      maze27&01fffh | 6000h
 
         db      "MAZE28"
-        db      maze28>>16
-        dw      maze28&0ffffh
+        db      maze28>>13 + 5
+        dw      maze28&01fffh | 6000h
+	
         db      "MAZE29"
-        db      maze29>>16
-        dw      maze29&0ffffh
+        db      maze29>>13 + 5
+        dw      maze29&01fffh | 6000h
 
         db      "MAZE30"
-        db      maze30>>16
-        dw      maze30&0ffffh
+        db      maze30>>13 + 5
+        dw      maze30&01fffh | 6000h
 
 
 
@@ -278,65 +262,18 @@ LoadMazeR:
 
 
 
-8KLdir: push    de
-        push    af
-        ld      a,c
-        or      a
-        jr      z,.noinc
-        inc     a
-
-.noinc:
-        ld      c,a
-        ld      a,h
-        and     e0h
-        rlca
-        rlca
-        rlca
-        pop     de
-        add     a,d
-        pop     de
-        ld      (pageldir),a
-        ld      (6800h),a
-
-        bit     7,h
-        jr      z,.loop
-        ld      a,-20h
-        add     a,h
-        ld      h,a
-
-
-.loop:
-        bit     7,h
-        jr      z,.putp2
-
-
-.putp1: ld      a,-20h
-        add     a,h
-        ld      h,a
-
-        ld      a,(pageldir)
-        inc     a
-        ld      (pageldir),a
-        ld      (6800h),a
-
-
-.putp2:
-        ld      a,(hl)
-        ld      (de),a
-        inc     de
-        inc     hl
-        dec     c
-        jp      nz,.loop
-        djnz    .loop
-        ret
-
-
-section rdata
-.page:          rb      1
-section code
-
-
-
+ 8KLdir:
+	ld	(6800h),a
+	
+ .loop:
+	bit	7,h
+	jr	z,.copy
+	ld	h,60h
+	inc	a
+	ld	(6800h),a
+.copy:	ldi
+	jp	pe,.loop
+	ret
 ; *** MEMORY SUBROUTINES ***
 
 RAM8K:          equ             0
@@ -911,7 +848,6 @@ rampage0:       equ 0f37eh
 rampage1:       equ 0f37dh
 rampage2:       equ 0f37ch
 rampage3:       equ 0f37bh
-pageldir:       equ 0f37ah
 
 
 section rdata
