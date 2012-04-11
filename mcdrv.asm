@@ -388,118 +388,119 @@ inichip1:				; ...
 ; Search and init FM
 
 
-
-
 MCSearchFM:
-		ld	a,1
-		ld	(FMfound),a
-	        in a,(0a8h)
-		push af
-		ld a,(0ffffh)
-		cpl
-		push af
+DetectMSXMUSIC:
+        xor     a
+        ld      (FMSlot),a              ; reset slotnr
+	inc	a
+	ld	(FMfound),a
 
-		ld hl,0
-		add hl,sp
-		dec hl
-		ld de,20+(MCEND-MCfindfm1)
-		or a
-		sbc hl,de
-		push hl
+.pri_l: push    bc
+        ld      a,4
+        sub     b
+        ld      c,a
+        ld      hl,EXPTBL
+        add     a,l
+        ld      l,a
+        ld      a,(hl)
+        add     a,a
+        jr      nc,.notExp
 
-		ld de,MCfindfm1
-		ex de,hl
-		ld bc,MCEND-MCfindfm1
-		ldir
-		pop hl
-		jp (hl)
+        ld      b,4                     ; slot is expanded
+.exp_l: push    bc
+        ld      a,24h
+        sub     b
+        rlca
+        rlca
+        or      c
+        ld      (SearchTemp),a
 
+        call    .SearchFM
 
-MCfindfm1	ld	hl,0FCCAh
-		xor	a
-		ld	b,4
-MCFMLP2:	push	bc
-		ld	b,4
-MCFMLP1:	push	bc
-		push	af
-		push	hl
-		set	7,a
-		ld	h,040h
-		call	024h
-		pop	hl
-		push	hl
-		ld	a,(hl)
-		cp	020h
-		jr	z,MCFMTest
-MCFMt		jr	z,MCFMFnd
-		pop	hl
-		pop	af
-		add	a,4
-		and	0Fh
-		inc	hl
-		inc	hl
-		inc	hl
-		inc	hl
-		pop	bc
-		djnz	MCFMLP1
-		add	a,1
-		and	03h
-		pop	bc
-		djnz	MCFMLP2
-		xor	a
-		ld	(FMfound),a
+        ld      a,(FMSlot)
 
+        or      a
+        pop     bc
+        jr      nz,.end
+        djnz    .exp_l
+.nextpri:
+        pop     bc
+        djnz    .pri_l
+	xor	a
+	ld	(FMfound),a	
+        ret
 
-MCRecover:	pop af
-		ld b,a
-		pop af
-		out (0a8h),a
-		ld a,b
-		ld (0ffffh),a
-		ret
+.notExp:                                ; slot is not expanded
+        ld      a,c
+        ld      (SearchTemp),a
 
+        call    .SearchFM
 
-MCFMTest:	ld	hl,0401Ch
-		ld	de,MCFMText ; Esto por supesto debria cambiarlo
-		ld	b,4
-MCFMLP:		ld	a,(de)
-		cp	(hl)
-		jr	nz,MCFMt
-		inc	hl
-		inc	de
-		djnz	MCFMLP
-		cp	a
-		jr MCFMt
+        ld      a,(FMSlot)
 
-MCFMFnd:	pop	hl
-		pop	af
-		pop	bc
-		pop	bc
+        or      a
+        jp      z,.nextpri
+.end:   pop     bc
+        ret
+	
+.SearchFM:
+        ld      b,8
+        ld      hl,.TxtAPRL
+        ld      de,4018h
+        call    .Compare
+        ret     nc
 
-MCFM_Check:	ld	hl,04018h
-		ld	de,MCFM_Japones	; al igual que esto
-		ld	b,4
-MCJapo:		ld	a,(de)
-		cp	(hl)
-		jr	nz,MCEs_Japones
-		inc	hl
-		inc	de
-		djnz	MCJapo
-		jr	MCRecover
-MCEs_Japones:
-		ld	a,(07FF6h)
-		or	1
-		ld	(07FF6h),a
-		ei
-		jr	MCRecover
+        ld      b,4
+        ld      hl,.TxtOPLL
+        ld      de,401Ch
+        call    .Compare
+        ret     c
 
-MCFMText:	db	"OPLL"
-MCFM_Japones:	db	"APRL"
-MCEND:		db	0
+        ld      hl,7FF6h
+        push    af
+        push    hl
+        call    RDSLT
+        or      1
+        ld      e,a
+        pop     hl
+        pop     af
+        call    WRSLT
+        or      a
+	ret
 
+.Compare:
+        ld      a,(SearchTemp)
+        ld      c,a
+.loop:  push    bc
+        push    hl
+        push    de
+        ld      a,c
+        ex      de,hl
+        call    RDSLT
+        pop     de
+        pop     hl
+        pop     bc
+        cp      (hl)
+        scf
+        ret     nz
 
+        inc     hl
+        inc     de
+        djnz    .loop
+        ld      a,c
+        ld      (FMSlot),a
+        or      a
+        ret
+	
 
+.TxtAPRL: db     "APRL"
+.TxtOPLL: db     "OPLL"
 
+section rdata
+SearchTemp:     rb      1
+FMSlot: 	rb      1
+section code	
+	
 
 
 ;****************************************************************************
