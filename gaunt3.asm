@@ -709,6 +709,10 @@ vrampage:       db      0
 
 PutColorTextPerP:
         call    PutSplitPage
+	call	PutColorTextPerP2
+        jp    	RestorePage
+	
+PutColorTextPerP2:
         ld      a,ixl           ;Mira con que personaje se ha llamado
         and     20h             ;en funcion de la parte baja de la direccion
         ld      de,3400h        ;por lo que si se crea un nuevo fuente
@@ -716,8 +720,8 @@ PutColorTextPerP:
         ld      de,3488h
 .572:   call    PutColorLetter           ;[0B6B0h]
         call    PutColorLetter           ;[0B6B0h]
-        call    PutColorLetter
-        jp    RestorePage
+        jp    	PutColorLetter
+
 
 
 
@@ -944,7 +948,7 @@ InitPJ:
         call    DefSymbols      ;[0B895h]
 
         ld      c,5bh
-        call    PutColorTextPer ;[0B69Eh]
+        call    PutColorTextPerP2
         ld      c,8bh
         jp      PutColorLetter  ;[0B6B0h]
 
