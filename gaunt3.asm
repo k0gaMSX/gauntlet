@@ -13,6 +13,7 @@ VramSpColour:   equ     5c00h
 Rg0Sav:         equ     0f3dfh
 Rg1Sav:         equ     0f3e0h
 Rg4Sav:         equ     0f3dfh+4
+Rg9Sav:         equ     0ffe8h
 LdAddress:      equ     8000h-7
 Rg8sav:         equ     0FFE7h
 PutColorF:      equ     0B4a6h
@@ -711,7 +712,7 @@ PutColorTextPerP:
         call    PutSplitPage
 	call	PutColorTextPerP2
         jp    	RestorePage
-	
+
 PutColorTextPerP2:
         ld      a,ixl           ;Mira con que personaje se ha llamado
         and     20h             ;en funcion de la parte baja de la direccion
@@ -1115,6 +1116,12 @@ sc4:
         ld      a,128+0
         out     (c),a
 
+        ld    a,(Rg9Sav)
+	or    2
+	ld    (Rg9Sav),a
+	out   (c),a
+	ld    a,128+9
+	out   (c),a
 ;;; Aqui hay sitio para parches: 06-2010
 
         ret
@@ -1660,7 +1667,7 @@ RefreshScrD:    db 0
         nop
         nop
 
-  
+
         forg    958Eh-LdAddress
         org     958Eh
 
@@ -1692,6 +1699,3 @@ LdirPat:
         ld      c,8
         ldir
         jp      LdirPat2
-
-
-
