@@ -23,6 +23,7 @@ RamSlotPage2J:
         jp      RamSlotPage2
 
 
+Rg9Sav_:       equ   0ffe8h
 
 Init:
         ld      sp,0f660h
@@ -31,6 +32,32 @@ Init:
         call    searchramnormal
 	call 	InitBasePorts
         call    SetIntroPages
+        ld    	a,7
+	call 	SNSMAT
+	and     040h
+        ld      a,(Rg9Sav_)
+        jr      nz,.60Hz
+
+	and     0fdh
+	ld      (Rg9Sav_),a
+	out     (99h),a
+	ld      a,128+9
+	out     (99h),a
+        xor     a
+	ld      (0FFFCh),a
+	jr      .intro
+
+.60Hz:
+        or      2
+	ld      (Rg9Sav_),a
+	out     (99h),a
+	ld      a,128+9
+	out     (99h),a
+	ld      (0FFFCh),a
+	jr      .intro
+
+
+
 .intro:
         call    StartLogo
         call    ShowIntro
@@ -49,10 +76,10 @@ Init:
 %include "gaunt1.asm"
 %include "aamsx.asm"
 
-musicpt3:	
+musicpt3:
 	incbin "gauntlet.pt3"
-	
-	
+
+
 section         code
 
 p1end:  ds      p1padd,0

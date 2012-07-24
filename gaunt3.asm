@@ -1116,12 +1116,22 @@ sc4:
         ld      a,128+0
         out     (c),a
 
+        ld    a,(0fffch)
+        or    a
         ld    a,(Rg9Sav)
+	jr    z,.50Hz
 	or    2
+	jr    .putHz
+.50Hz:
+        and   0feh
+
+.putHz:
 	ld    (Rg9Sav),a
 	out   (c),a
 	ld    a,128+9
 	out   (c),a
+
+
 ;;; Aqui hay sitio para parches: 06-2010
 
         ret
