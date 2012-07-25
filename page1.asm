@@ -70,7 +70,7 @@ Init:
         call    LoadSecondBload
         ret
 
-
+        db    "Made by TNI 2012"
 
 %include "sys.asm"
 %include "gaunt1.asm"
