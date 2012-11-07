@@ -829,9 +829,8 @@ SlotChg:
 
 
 InitBasePorts:
-        ld      de,BASEPORT.PSG
-        ld      hl,(WRTPSG+1)
-        call    .scan
+	ld	a,$10
+	ld	(BASEPORT.PSG),a
 
         ld      de,BASEPORT.PPI
         ld      hl,(WSLREG+1)

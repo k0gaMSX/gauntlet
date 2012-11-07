@@ -134,7 +134,28 @@ Sc2toSc4:
         jp      MainLoop
 
 
+	forg 0B3EF-LdAddress
+	org 0B3EF
+WritePSG:
+	di
+	out     (010h),a        ;PSG address
+	push    af
+	ld      a,e
+	ei
+	out     (011h),a        ;write PSG register
+	pop     af
+	ret
 
+
+
+;Nombre: ReadPSG
+;Objetivo: Leer un registro del PSG
+;Entrada: a -> Registro del PSG que se quiere leer
+
+ReadPSG:
+	out     (010h),a        ;PSG address
+	in      a,(012h)        ;read PSG register
+	ret
 
         forg 0ba8dh-LdAddress
         org 0ba8dh
