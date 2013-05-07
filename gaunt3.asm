@@ -134,8 +134,8 @@ Sc2toSc4:
         jp      MainLoop
 
 
-	forg 0B3EF-LdAddress
-	org 0B3EF
+	forg 0B3EFh-LdAddress
+	org 0B3EFh
 WritePSG:
 	di
 	out     (010h),a        ;PSG address
