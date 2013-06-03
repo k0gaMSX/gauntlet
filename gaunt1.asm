@@ -80,6 +80,13 @@ SelectChars:
 	halt
 	djnz .loop
 
+        ld      IY,AYREGS
+        ld      [IY+7],$BF
+        ld      [IY+8],0
+        ld      [IY+8],0
+        ld      [IY+9],0
+        ld      [IY+10],0
+        call     PT3_ROUT
         ret
 
 
