@@ -964,8 +964,6 @@ ColourSFX:
 
         ld      a,2
         call    VER_PAGE
-        ld      hl,PAL_NEGRO
-        call    PutPal
 
         di
         ld      a,LINEINT
@@ -1062,11 +1060,14 @@ InitVDP:
         call    COLOR0_OFF
         xor     a
         call    SET_CFONDO
-        ld      hl,TitlePallette
+        ld      hl,PAL_NEGRO
         ld      de,PAL_GM
         ld      bc,32
         ldir
         call    SPD_OFF
+
+        ld      hl,PAL_NEGRO
+        call    PutPal
 
         ld      hl,0fd9ah
         ld      de,oldvector
