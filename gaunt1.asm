@@ -18,8 +18,6 @@ TIMEFADE equ    3
 section code
 
 ShowIntro:
-        ld      a,1fh
-        out     (2eh),a
 	xor	a
 	ld	(playingsong),a
 
