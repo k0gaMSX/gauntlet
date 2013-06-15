@@ -43,13 +43,14 @@ RowKeyb:        equ     847Fh
         dw      0ca20h
         dw      8000h
 
-	forg	0300+7
-	org	08300h
+	forg	02d7h+7
+	org	082d7h
 
 	ld	hl,kbd
 	ld	de,0f975h
 	ld	bc,KBDEND-SCANJOY
 	ldir
+        jp      0b90fh           ; evito rutina de slot
 
 JOY1STAT:	equ	8427h
 JOY2STAT:	equ	8447h
@@ -176,7 +177,13 @@ LEE_JOY_2:
 	set	0,b	;B = 0000 000U
 
 LEE_JOY2R:
-	bit	3,a
+	bit     0,a
+	jr	nz,.1
+	set     1,b
+.1:	bit     1,a
+	jr	nz,.2
+	set     1,b
+.2:	bit	3,a
 	jr	nz,LEE_JOY2L
 	set	3,b	;B = 0000 R00U
 
@@ -1264,7 +1271,7 @@ RELMEM: equ 0f41fh
         ld      de,RELMEM
         ld      bc,RelocableCodeEnd-ChangeWallColor
         ldir
-        jp      8300h
+        jp      82d7h
 
 sc4:
         ld      a,(Rg0Sav)
