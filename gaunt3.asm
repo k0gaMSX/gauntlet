@@ -237,16 +237,6 @@ KBDEND: equ $
 	bit	1,(iy+06)
 
 
-	forg	0a26fh-LdAddress
-	org	0a26fh
-
-	ld	b,64h
-	push	bc
-	call	979ch
-	ei
-
-
-
         forg    95DDh-LdAddress
 	org     95DDh
 
@@ -902,7 +892,9 @@ SetColorTable:
 InitPJP:
         call    PutSplitPage
         call    InitPJ
-        jp      RestorePage
+        call	RestorePage
+	ei
+	ret
 
 
 RestorePage:
