@@ -54,8 +54,6 @@ RowKeyb:        equ     847Fh
 
 JOY1STAT:	equ	8427h
 JOY2STAT:	equ	8447h
-WRTPSG:	equ	0B3EFh
-RDPSG:	equ	0B3F9h
 SNSMAT:	equ	0B3FEh
 ROWTABLE:	equ	847Fh
 
@@ -81,9 +79,9 @@ MATLOOP:	ld	a,9
 
 	ld	a,0Fh
 	ld	e,8Fh	;''
-	call	WRTPSG	;[0B3EFh]
+	call	WritePSG_  ;[0B3EFh]
 	ld	a,0Eh
-	call	RDPSG	;[0B3F9h]
+	call	ReadPSG_  ;[0B3F9h]
 	cpl
 	and	3Fh
 	bit	5,a
@@ -97,9 +95,9 @@ MATLOOP:	ld	a,9
 nojoy1B: ld	(JOY1STAT),a	;[8427h]
 	ld	a,0Fh
 	ld	e,0CFh		;'O'
-	call	WRTPSG	;[0B3EFh]
+	call	WritePSG_ ;[0B3EFh]
 	ld	a,0Eh
-	call	RDPSG	;[0B3F9h]
+	call	ReadPSG_ ;[0B3F9h]
 	cpl
 	and	3Fh
 	bit	5,a
@@ -211,6 +209,23 @@ JOY2_END:
 	pop	af
 	pop	bc
 	ret
+
+WritePSG_:
+        di
+        out     (0A0h),a        ;PSG address
+        push    af
+        ld      a,e
+        ei
+        out     (0A1h),a        ;write PSG register
+        pop     af
+        ret
+
+
+ReadPSG_:
+        out     (0A0h),a        ;PSG address
+        in      a,(0A2h)        ;read PSG register
+        ret
+
 KBDEND: equ $
 
         forg    979fh-LdAddress
@@ -220,12 +235,6 @@ KBDEND: equ $
         forg    97a9h-LdAddress
         org     97a9h
 	bit	1,(iy+06)
-
-
-        forg    83d0h-LdAddress
-        org     83d0h
-        jp      0b90fh           ; evito rutina de slot
-
 
 
 	forg	0a26fh-LdAddress
