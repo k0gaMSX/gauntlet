@@ -544,6 +544,7 @@ PUT_FADET:      LD      B,16    ;ESTA LA QUE REALMENTE SE ENCARGA DE
 PFADE_OFFB:
         PUSH    BC
 PFADE_OFFW:
+	EI
         LD      A,(TIME)
         OR      A
         JR      NZ,PFADE_OFFW
