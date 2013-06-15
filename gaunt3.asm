@@ -226,6 +226,18 @@ KBDEND: equ $
         org     83d0h
         jp      0b90fh           ; evito rutina de slot
 
+
+
+	forg	0a26fh-LdAddress
+	org	0a26fh
+
+	ld	b,64h
+	push	bc
+	call	979ch
+	ei
+
+
+
         forg    95DDh-LdAddress
 	org     95DDh
 
