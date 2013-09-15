@@ -1069,6 +1069,12 @@ InitVDP:
         ld      hl,PAL_NEGRO
         call    PutPal
 
+	ld	l,0
+	ld	de,0
+	ld	4000h
+	ld	a,7
+	call	svram
+
         ld      hl,0fd9ah
         ld      de,oldvector
         ld      bc,5
