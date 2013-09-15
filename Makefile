@@ -43,10 +43,10 @@ deps: graphic orig data
 
 
 gauntlet:
-	make -C dsk
+	$(MAKE) -C dsk
 
 graphic:
-	make -C gfx
+	$(MAKE) -C gfx
 
 
 data: set1.col set1.pat set2.pat set3.pat
@@ -95,6 +95,6 @@ clean:
 	rm -f *.col
 	rm -f tniasm.*
 	rm -f *.spr
-	make -C gfx clean
-	make -C dsk clean
+	$(MAKE) -C gfx clean
+	$(MAKE) -C dsk clean
 

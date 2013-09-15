@@ -23,7 +23,7 @@ gtitle.tcf: g-title.sr5
 
 
 spr: 
-	make -C sprites
+	 $(MAKE) -C sprites
 	cp sprites/*.spr .
 	cp sprites/*.cc2 .
 
@@ -36,4 +36,4 @@ clean:
 	rm -f *.dat
 	rm -f .??
 	rm -f *.spr
-	make -C sprites clean
+	$(MAKE) -C sprites clean

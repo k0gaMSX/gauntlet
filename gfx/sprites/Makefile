@@ -4,15 +4,15 @@ SPRITES = warrior valkiria elf wizard
 
 
 sprites: 
-	make -C warrior
+	$(MAKE) -C warrior
 	cp warrior/*.spr .
-	make -C valkiria
+	$(MAKE) -C valkiria
 	cp valkiria/*.spr .
-	make -C elf
+	$(MAKE) -C elf
 	cp elf/*.spr .
-	make -C wizard
+	$(MAKE) -C wizard
 	cp wizard/*.spr .
-	make -C hand
+	$(MAKE) -C  -C hand
 	cp hand/*.spr .
 	cp hand/*.cc2 .
 
@@ -21,11 +21,11 @@ sprites:
 .PHONY:
 
 clean:
-	make -C warrior clean
-	make -C elf clean
-	make -C valkiria clean
-	make -C wizard clean
-	make -C hand clean
+	$(MAKE) -C warrior clean
+	$(MAKE) -C elf clean
+	$(MAKE) -C valkiria clean
+	$(MAKE) -C wizard clean
+	$(MAKE) -C hand clean
 	rm -f *.spr
 	rm -f *.cc2
 
